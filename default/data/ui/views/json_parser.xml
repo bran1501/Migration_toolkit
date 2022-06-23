@@ -1,0 +1,61 @@
+<form version="1.1">
+  <label>JSON syntax</label>
+  <fieldset submitButton="false">
+    <input type="text" token="id" searchWhenChanged="true">
+      <label>ID</label>
+    </input>
+    <input type="text" token="targets" searchWhenChanged="true">
+      <label>Targets</label>
+    </input>
+    <input type="text" token="version" searchWhenChanged="true">
+      <label>Version</label>
+    </input>
+    <input type="text" token="purge" searchWhenChanged="true">
+      <label>Purge</label>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+        <p>OPTIONS</p>
+        <p>"sh1"</p>
+         <p>"sh2"</p>
+         <p>"sh3"</p>
+         <p>"shc1"</p>
+         <p>"shc2"</p>
+          <p>"idm1"</p>
+          <p>"indexer"</p>
+        <p>--------</p>
+        <p>With Purge</p>
+               {
+      "ensure": "present",
+      "id": $id$,
+      "purgeconf": {
+        "inputs": [
+          $purge$
+        ],"inputs.conf.spec": [
+            $purge$
+          ]
+      },
+      "skipCompatibilityCheck": true,
+      "targets": [
+        $targets$
+      ],
+      "version": "$version$"
+    }    
+    <p>----------</p>
+            <p>Without Purge</p>
+               {
+      "ensure": "present",
+      "id": $id$,
+      "skipCompatibilityCheck": true,
+      "targets": [
+        $targets$
+      ],
+      "version": "$version$"
+    }    
+    
+      </html>
+    </panel>
+  </row>
+</form>
