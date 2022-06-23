@@ -1,0 +1,18 @@
+<nav search_view="search" color="#5C6DC0">
+<collection label="Main Comparison Dashboards">
+  <view name="main_validator" default="true"/>
+  </collection>
+<collection label="Data Validator">
+  <view name="data_validator"/>
+  </collection>
+<collection label="Useful Dashboards">
+  <view name="event_parser"/>
+  <view name="co2_parser"/>
+  <view name="data_quality"/>
+  </collection>
+<collection label="Others">
+  <view name="search" />
+  <view name="dashboards" />
+ </collection>
+</nav>
+
