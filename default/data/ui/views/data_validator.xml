@@ -1,0 +1,129 @@
+<!-- 
+Run ON-PREM
+| dbinspect index=* |stats values(guId) as GUIDs delim="," |nomv GUIDs
+COPY THE RESULT
+
+For the list of buckets:
+| dbinspect index=* | search state!=hot | dedup bucketId | rex field=bucketId "(?<index>[^~]+)~(?<bid>.*)" | table *
+
+--><form version="1.1" theme="dark">
+  <!--Base searches-->\
+  
+  
+  <init>
+    <set token="guid">PASTE IT HERE</set>
+  </init>
+  <search id="base1">
+    
+    <query>    | dbinspect index=$idx$  
+| rex field="bucketId" "(?&lt;idx&gt;.*?)~\d+~(?&lt;bkt&gt;.*?)$" 
+| search state=warm AND NOT bkt IN ($guid$) 
+| dedup id 
+| fields id 
+| eval bkt_exists_in_splunk_cloud="true" 
+| append 
+    [| inputlookup $lookup$
+    | rex field="bucketId" "(?&lt;idx&gt;.*?)~\d+~(?&lt;bkt&gt;.*?)$" 
+    | fields bucketId, id, bkt 
+    | search bucketId=$idx$~* 
+    | eval is_migration_bkt="true" 
+    | dedup id 
+    | fields id, is_migration_bkt] 
+| append 
+    [ search index=_internal host=*splunkcloud.com component=bucketmover "freeze completed succesfully" 
+    | fields bid 
+    | rex field="bid" "^(?&lt;index_name&gt;.*?)~(?&lt;id&gt;\d+)~(?&lt;GUID&gt;.*?)$" 
+    | search index_name=$idx$  NOT GUID IN ($guid$) 
+    | eval state="frozen" 
+    | dedup id 
+    | fields id,state] 
+| stats values(*) AS * by id
+| sort id 
+| eval bkt_exists_in_splunk_cloud = if(isnull(bkt_exists_in_splunk_cloud),"false",bkt_exists_in_splunk_cloud), state = if(isnull(state),"Not Frozen",state),is_migration_bkt = if(isnull(is_migration_bkt),"false",is_migration_bkt) | search is_migration_bkt=true bkt_exists_in_splunk_cloud=$missing$</query>
+    <earliest>0</earliest>
+    <latest></latest>
+  </search>
+  <label>&lt;STACK&gt; Data Validation</label>
+  <fieldset submitButton="false" autoRun="false">
+    <input type="dropdown" token="lookup" searchWhenChanged="true">
+      <label>Region</label>
+      <choice value="LOOKUP.CSV">LOOKUP NAME</choice>
+      <search>
+        <query/>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="idx" searchWhenChanged="true">
+      <label>Index</label>
+      <fieldForLabel>title</fieldForLabel>
+      <fieldForValue>title</fieldForValue>
+      <search>
+        <query>|rest /services/data/indexes | fields title | dedup title | sort title</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <choice value="*">All</choice>
+    </input>
+    <input type="radio" token="missing" searchWhenChanged="true">
+      <label>Buckets</label>
+      <choice value="&quot;false&quot;">Missing</choice>
+      <choice value="&quot;true&quot;">Migrated</choice>
+      <default>"false"</default>
+      <initialValue>"false"</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>All buckets</title>
+        <search base="base1">
+          <query>| fields id, bkt_exists_in_splunk_cloud, is_migration_bkt,state</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total Buckets</title>
+        <search base="base1">
+          <query>| stats c(id)</query>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total $idx$ buckets</title>
+        <search>
+          <query>| inputlookup $lookup$
+    | rex field="bucketId" "(?&lt;idx&gt;.*?)~\d+~(?&lt;bkt&gt;.*?)$" 
+    | fields bucketId, id, bkt 
+    | search bucketId=$idx$~* 
+    | dedup id 
+    | stats c(id) as "Total Buckets"</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Search On-prem</title>
+        <search base="base1">
+          <query>| stats values(id) as ids 
+| eval ids = mvjoin(ids,","), search1 = "| dbinspect index=", search2=" |search id IN (", search3= ") splunk_server=* NOT state=hot | dedup bucketId | rex field=bucketId \"(?&lt;index&gt;[^~]+)~(?&lt;bid&gt;.*)\" | table * ", full_search = search1."$idx$".search2.ids.search3
+| fields full_search</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

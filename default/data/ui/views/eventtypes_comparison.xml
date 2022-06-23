@@ -1,0 +1,44 @@
+<form version="1.1">
+  <label>Eventtypes comparison</label>
+  <fieldset submitButton="false">
+    <input type="radio" token="equal" searchWhenChanged="true">
+      <label>Similar</label>
+      <choice value="1">True</choice>
+      <choice value="0">False</choice>
+      <default>0</default>
+      <initialValue>0</initialValue>
+    </input>
+    <input type="dropdown" token="lookup" searchWhenChanged="true">
+      <label>Environment</label>
+      <choice value="main">Main</choice>
+      <choice value="es">ES</choice>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search>
+          <query>| inputlookup $lookup$_all_eventtypes_src.csv 
+| eval src = "true" 
+| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, tags as src_TAGS, search as src_SEARCH
+| append 
+    [| rest splunk_server=local servicesNS/-/-/saved/eventtypes 
+    | fields eai:acl.app,eai:acl.owner,eai:acl.sharing,search,tags,title 
+    | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, tags as dest_TAGS, search as dest_SEARCH
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+| search src=true dest=true 
+| sort src_APP
+| fields title, *_APP, *_SEARCH
+| eval equal = if(src_SEARCH==dest_SEARCH,1,0) | search equal=$equal$</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

@@ -1,0 +1,48 @@
+<!--
+Run this search
+| rest /services/authorization/roles splunk_server=local | fields title, srchIndexesAllowed,srchIndexesDefault, srchDiskQuota, imported_roles, capabilities 
+
+
+--><form version="1.1">
+  <label>Roles Comparison</label>
+  <fieldset submitButton="false"></fieldset>
+  <row>
+    <panel>
+      <input type="dropdown" token="roles" searchWhenChanged="true">
+        <label>Lookup</label>
+        <choice value="LOOKUP FILE.CSV.csv">Splunk Main</choice>
+        <choice value="LOOKUP FILE.CSV">Splunk ES</choice>
+      </input>
+      <input type="radio" token="missing_roles" searchWhenChanged="true">
+        <label>Missing</label>
+        <choice value="false">True</choice>
+        <choice value="true">False</choice>
+        <default>false</default>
+        <initialValue>false</initialValue>
+        <prefix>"</prefix>
+        <suffix>"</suffix>
+      </input>
+      <table>
+        <title>Roles</title>
+        <search>
+          <query>| inputlookup $roles$
+| eval src = "true" 
+| rename capabilities as src_capabilities, srchDiskQuota as src_srchDiskQuota, srchIndexesAllowed as src_srchIndexesAllowed, srchIndexesDefault as src_srchIndexesDefault,imported_roles as src_imported_roles 
+| append 
+    [| rest /services/authorization/roles splunk_server=local 
+    | fields title, srchIndexesAllowed,srchIndexesDefault, srchDiskQuota, imported_roles, capabilities 
+    | rename capabilities as dest_capabilities, srchDiskQuota as dest_srchDiskQuota, srchIndexesAllowed as dest_srchIndexesAllowed, srchIndexesDefault as dest_srchIndexesDefault,imported_roles as dest_imported_roles 
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+| search dest=$missing_roles$ src="true" 
+| table title dest src *_imported_roles *_capabilities *_srchDiskQuota *_srchIndexesAllowed *_srchIndexesDefault</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

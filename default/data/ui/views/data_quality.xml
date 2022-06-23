@@ -1,0 +1,206 @@
+<form version="1.1">
+  <label>Data Quality</label>
+  <search id="base1">
+    <query>(index=_internal source=*splunkd.log* (log_level=ERROR OR log_level=WARN) (component=AggregatorMiningProcessor OR component=DateParserVerbose OR component=LineBreakingProcessor)) 
+| rex field=_raw "Context: source(::|=)(?&lt;context_source&gt;[^\\|]*?)\\|host(::|=)(?&lt;context_host&gt;[^\\|]*?)\\|(?&lt;context_sourcetype&gt;[^\\|]*?)\\|" 
+| eval data_source=if((isnull(data_source) AND isnotnull(context_source)),context_source,data_source), data_sourcetype=if((isnull(data_sourcetype) AND isnotnull(context_sourcetype)),context_sourcetype,data_sourcetype) | stats c by data_sourcetype,component,_raw,host</query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <description>Christhian Bran(PS)</description>
+  <fieldset submitButton="false">
+    <input type="text" token="sourcetype" searchWhenChanged="true">
+      <label>Sourcetype</label>
+    </input>
+    <input type="time" token="time" searchWhenChanged="true">
+      <label>Time range picker</label>
+      <default>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="index" searchWhenChanged="true">
+      <label>Index</label>
+      <search>
+        <query>|tstats count where sourcetype=$sourcetype$ by index</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <fieldForLabel>index</fieldForLabel>
+      <fieldForValue>index</fieldForValue>
+      <choice value="*">ALL</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Sourcetypes by Hosts and their type</title>
+      <table>
+        <search>
+          <query>index=_internal source=*metrics.log group=per_sourcetype_thruput series="$sourcetype$" (host=idm*.splunkcloud.com OR host!=*splunkcloud.com) 
+| eval host=lower(host) 
+| stats c by host 
+| fields - c 
+| rename host as hostname 
+| join hostname
+    [ search index=_internal source=*metrics.log group=tcpin_connections (hostname=idm*.splunkcloud.com OR hostname!=*splunkcloud.com) group=tcpin_connections 
+    | eval hostname=lower(hostname) 
+    | stats c by hostname, fwdType 
+    | fields - c]</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">50</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Apps</title>
+        <search>
+          <query>| rest splunk_server=local /servicesNS/-/-/configs/conf-props/$sourcetype|h$ |fields eai:appName |dedup eai:appName</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Line Breaker</title>
+        <search>
+          <query>index=$index$ sourcetype=$sourcetype$  | rex "^(?&lt;LINE_BREAKER&gt;.*?)\s" |stats c by LINE_BREAKER |sort -c</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <drilldown>
+          <set token="BREAKER">$click.value$</set>
+          <link target="_blank">search?q=index%3D$index$%20sourcetype%3D$sourcetype$%20%20%7C%20rex%20%22%5E(%3F%3CLINE_BREAKER%3E.*%3F)%5Cs%22%20|search%20LINE_BREAKER%3D%22$BREAKER$%22&amp;earliest=$time.earliest$&amp;latest=$time.latest$&amp;form.click=$BREAKER$</link>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>LEN RAW | HEAD 10</title>
+        <search>
+          <query>index=$index$ sourcetype=$sourcetype$| eval len_raw=len(_raw) |stats c by len_raw |sort -len_raw | head 10</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <drilldown>
+          <set token="len_raw">$click.value$</set>
+          <link target="_blank">search?q=index=$index$ sourcetype=$sourcetype$| eval len_raw=len(_raw) | search len_raw=$len_raw$&amp;earliest=$time.earliest$&amp;latest=$time.latest$&amp;form.click=$len_raw$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <event>
+        <title>Sample Events</title>
+        <search>
+          <query>index=$index$ sourcetype=$sourcetype$ | head 100</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="list.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </event>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Issues of sourcetype</title>
+        <search base="base1">
+          <query>| eval data_host = if(isnull(data_host) AND isnotnull(context_host), context_host, data_host) 
+| search data_sourcetype="$sourcetype$"
+| stats
+    count(eval(component=="LineBreakingProcessor" OR component=="DateParserVerbose" OR component=="AggregatorMiningProcessor")) as total_issues
+    dc(data_source) AS "Source Count"
+    count(eval(component=="LineBreakingProcessor")) AS "Line Breaking Issues"
+    count(eval(component=="DateParserVerbose")) AS "Timestamp Parsing Issues"
+    count(eval(component=="AggregatorMiningProcessor")) AS "Aggregation Issues" by data_sourcetype 
+| sort - total_issues 
+| rename
+    data_sourcetype as Sourcetype
+    total_issues as "Total Issues"</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Line Breaking Issues</title>
+        <search base="base1">
+          <query>|search data_sourcetype=$sourcetype$ component=LineBreakingProcessor | head 5</query>
+        </search>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Data Parser Issues</title>
+        <search base="base1">
+          <query>| search data_sourcetype=$sourcetype$ component=DateParserVerbose | head 5</query>
+        </search>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Aggregator Issues</title>
+        <search base="base1">
+          <query>|search data_sourcetype=$sourcetype$ component=AggregatorMiningProcessor | head 5</query>
+        </search>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Hosts with Line Breaking Errors</title>
+        <search base="base1">
+          <query>|search data_sourcetype=$sourcetype$ component=LineBreakingProcessor | rex "data_host=\"(?&lt;data_host&gt;.*?)\""  |stats c by data_host | fields - c</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Hosts from Time issues</title>
+        <search base="base1">
+          <query>| search data_sourcetype=$sourcetype$ component=DateParserVerbose | rex "\|host\=(?&lt;data_host&gt;.*?)\|" | stats c by data_host | fields - c</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Max Length of Line Breaking error</title>
+        <search base="base1">
+          <query>search data_sourcetype=$sourcetype$ component=LineBreakingProcessor | rex "line length \&gt;\= (?&lt;len&gt;\w+)\s" | stats max(len)</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+  </row>
+</form>
