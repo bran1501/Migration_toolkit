@@ -1,0 +1,44 @@
+<form version="1.1">
+  <label>Macros Comparison</label>
+  <description>Last Update: &lt;DATE&gt;</description>
+  <fieldset submitButton="false"></fieldset>
+  <row>
+    <panel>
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Equal</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="dropdown" token="lookup" searchWhenChanged="true">
+        <label>Environment</label>
+        <choice value="main">Main</choice>
+        <choice value="es">ES</choice>
+      </input>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search>
+          <query>| inputlookup $lookup$_all_macros_src.csv 
+| eval src = "true" 
+| rename eai:acl.app as src_APP, definition as src_definition, args as src_args, disabled as src_disabled, eai:acl.owner as src_owner, eai:acl.sharing as src_sharing
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/configs/conf-macros | fields title eai:acl.app definition args disabled eai:acl.owner eai:acl.sharing
+     |rename eai:acl.app as dest_app, definition as dest_definition, args as dest_args, disabled as dest_disabled, eai:acl.owner as dest_owner,eai:acl.sharing as dest_sharing
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+| search dest=true src="true" 
+|fields title, *_definition, *_args, *_APP, *_owner, *_sharing
+| eval equal = if(src_definition==dest_definition,1,0) 
+| search equal=$equal$ 
+| sort src_APP</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>
