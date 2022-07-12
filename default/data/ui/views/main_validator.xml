@@ -231,7 +231,7 @@ RUN ON-PREM:
         </search>
         <option name="count">100</option>
         <drilldown>
-          <link target="_blank">/app/cloud_migration_app/savedsearch?form.equal=0&amp;form.lookup=$lookup$</link>
+          <link target="_blank">/app/Migration_toolkit/savedsearch?form.equal=0&amp;form.lookup=$lookup$</link>
         </drilldown>
       </table>
     </panel>
@@ -281,7 +281,7 @@ RUN ON-PREM:
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/cloud_migration_app/dashboard?form.equal=0&amp;form.lookup=$lookup$</link>
+          <link target="_blank">/app/Migration_toolkit/dashboard?form.equal=0&amp;form.lookup=$lookup$</link>
         </drilldown>
       </table>
     </panel>
@@ -332,7 +332,7 @@ RUN ON-PREM:
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
         <drilldown>
-          <link target="_blank">/app/cloud_migration_app/fx?form.equal=0&amp;form.lookup=$lookup$</link>
+          <link target="_blank">/app/Migration_toolkit/fx?form.equal=0&amp;form.lookup=$lookup$</link>
         </drilldown>
       </table>
     </panel>
@@ -381,7 +381,7 @@ RUN ON-PREM:
         </search>
         <option name="drilldown">cell</option>
         <drilldown>
-          <link target="_blank">/app/cloud_migration_app/eventtypes_comparison?form.equal=0&amp;form.lookup=$lookup$</link>
+          <link target="_blank">/app/Migration_toolkit/eventtypes_comparison?form.equal=0&amp;form.lookup=$lookup$</link>
         </drilldown>
       </table>
     </panel>
