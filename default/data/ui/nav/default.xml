@@ -7,7 +7,6 @@
   </collection>
 <collection label="Useful Dashboards">
   <view name="event_parser"/>
-  <view name="json_parser"/>
   <view name="data_quality"/>
   </collection>
 <collection label="Others">
