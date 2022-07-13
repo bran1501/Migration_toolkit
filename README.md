@@ -21,8 +21,6 @@ Check the source and pre-requisites, then assign the correct name to the lookup
 
 Event Parser: Parse your data using the magic 8.
 
-JSON Syntax: Just enter the values for JSON and paste it in the JSON environment while installing apps
-
 Data Quality: Check the sourcetypes with issues and use this dashboard to identify better and faster the main issues.
 
 
