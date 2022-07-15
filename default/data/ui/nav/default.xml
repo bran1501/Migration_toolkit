@@ -1,6 +1,7 @@
 <nav search_view="search" color="#5C6DC0">
 <collection label="Main Comparison Dashboards">
-  <view name="main_validator" default="true"/>
+  <view name="content_validation_v2" default="true"/>
+  <view name="update_validation"/>
   </collection>
 <collection label="Data Validator">
   <view name="data_validator"/>
