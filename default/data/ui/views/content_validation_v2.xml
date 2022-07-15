@@ -1,0 +1,840 @@
+<!--
+
+ANY QUESTIONS REACH OUT TO CHRISTHIANB@SPLUNK.COM
+
+
+PRE-REQUISITES:
+RUN ON-PREM:
+| rest splunk_server=local /servicesNS/-/-/data/ui/views | fields eai:acl.sharing, eai:acl.app, disabled, label, title, eai:acl.owner eai:data updated
+-> LOOKUP: $lookup$_all_dashboards.csv
+
+| rest splunk_server=local /servicesNS/-/-/saved/searches | fields eai:acl.app title is_scheduled eai:acl.owner eai:acl.sharing search updated
+-> LOOKUP: $lookup$_all_saved_searches_src.csv 
+
+| rest splunk_server=local /servicesNS/-/-/data/props/extractions | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing author attribute value updated
+-> LOOKUP: $lookup$_all_field_extraction_src.csv
+
+| rest splunk_server=local servicesNS/-/-/saved/eventtypes | fields eai:acl.app,eai:acl.owner,eai:acl.sharing,search,tags,title, updated
+-> LOOKUP: $lookup$_all_eventtypes_src.csv
+
+| rest splunk_server=local /servicesNS/-/-/search/tags | fields title updated
+-> LOOKUP: $lookup$_all_tags.csv
+
+| rest splunk_server=local /servicesNS/-/-/datamodel/model | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing,updated
+-> LOOKUP: $lookup$_all_datamodel_src.csv
+
+| rest splunk_Server=local /servicesNS/-/-/data/lookup-table-files | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing,updated
+-> LOOKUP: $lookup$_all_lookup_src.csv 
+
+| rest splunk_server=local /servicesNS/-/-/configs/conf-macros | fields title eai:acl.app eai:acl.owner eai:acl.sharing definition args disabled updated
+-> LOOKOUP: $lookup$_all_macros_src.csv 
+
+| rest splunk_server=local /servicesNS/-/-/apps/local | fields label title 
+-> LOOKUP: $lookup$_all_apps_src.csv 
+
+| rest splunk_server=local /servicesNS/-/-/authentication/users | fields email realname title type 
+-> LOOKUP: $lookup$_all_users_src.csv 
+
+--><form version="1.1">
+  <!-- BASE SEARCHES-->
+  <!-- Saved Searches-->
+  <search id="savedsearch">
+    <query>
+      <![CDATA[| inputlookup $lookup$_all_saved_searches_src.csv 
+    | eval src = "true"  
+    | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, search as src_search  
+    |search src_SHARING$user$ 
+    | append     
+    [| rest splunk_server=local /servicesNS/-/-/saved/searches     
+    | fields eai:acl.app title eai:acl.owner eai:acl.sharing disabled search    
+    | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, search as dest_search     
+    |search dest_SHARING$user$     
+    | eval dest="true"]  
+    | stats values(*) as * by title  
+    | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)  
+|search src_APP IN ($include$)
+    ]]>
+</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Dashboards-->
+  <search id="dashboard">
+    <query>
+      <![CDATA[| inputlookup $lookup$_all_dashboards.csv |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
+| eval src = "true" , time=$TIME$ |rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+| rename eai:acl.app as src_APP, eai:acl.sharing as src_SHARING, disabled as src_disabled, label as src_label, eai:acl.owner as src_owner, eai:data as src_data
+|search src_SHARING$user$
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/data/ui/views 
+    | fields eai:acl.sharing, eai:acl.app, disabled, label, title, eai:acl.owner, eai:data
+    | rename eai:acl.app as dest_APP, eai:acl.sharing as dest_SHARING, disabled as dest_disabled, label as dest_label, eai:acl.owner as dest_owne,  eai:data as dest_data
+    |search dest_SHARING$user$
+    | eval dest="true" ]
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+|search src_APP IN ($include$)
+]]>
+</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Field Extractions -->
+  <search id="field_extractions">
+    <query>| inputlookup $lookup$_all_field_extraction_src.csv 
+| eval src = "true" 
+| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, attribute as src_attribute, author as src_author , value as src_value
+|search src_SHARING$user$
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/data/props/extractions 
+    | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing author attribute value 
+    | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, attribute as dest_attribute, author as dest_author,  value as dest_value
+    |search dest_SHARING$user$
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) |fields - value
+|search  src_APP IN ($include$)</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Eventtypes-->
+  <search id="eventtypes">
+    <query>| inputlookup $lookup$_all_eventtypes_src.csv 
+| eval src = "true" 
+| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, tags as src_TAGS
+|search src_SHARING$user$
+| append 
+    [| rest splunk_server=local servicesNS/-/-/saved/eventtypes 
+    | fields eai:acl.app,eai:acl.owner,eai:acl.sharing,search,tags,title 
+    | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, tags as dest_TAGS
+    |search dest_SHARING$user$
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| fields - search 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+| search  src_APP IN ($include$)</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Lookups -->
+  <search id="lookups">
+    <query>| inputlookup $lookup$_all_lookup_src.csv 
+| eval src = "true" 
+| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING 
+|search src_SHARING$user$
+| append 
+    [| rest splunk_Server=local /servicesNS/-/-/data/lookup-table-files 
+    | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing 
+    | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING 
+    |search dest_SHARING$user$
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+| search dest=$missing$ src="true"  src_APP IN ($include$)</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Datamodel -->
+  <search id="datamodel">
+    <query>| inputlookup $lookup$_all_datamodel_src.csv
+| eval src = "true" 
+| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, displayName as src_displayName
+|search src_SHARING$user$
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/datamodel/model 
+    | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing 
+| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, displayName as src_displayName
+|search dest_SHARING$user$
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+| search dest=$missing$ src="true"  src_APP IN ($include$)</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Users -->
+  <search id="users">
+    <query>
+      <![CDATA[| inputlookup $lookup$_all_users_src.csv 
+| eval src = "true" 
+| eval title=lower(title) 
+| rename email as src_email, realname as src_realname, type as src_type
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/authentication/users 
+    | fields email realname title type
+    | rename email as dest_email, realname as dest_realname, type as dest_type
+    | eval dest="true"] 
+| stats values(*) as * by title
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
+| search dest=$missing$ src="true"]]>
+</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Macros -->
+  <search id="macros">
+    <query>
+      <![CDATA[| inputlookup $lookup$_all_macros_src.csv 
+| eval src = "true" 
+| rename eai:acl.app as src_APP, definition as src_definition, args as src_args, disabled as src_disabled, eai:acl.owner as src_owner, eai:acl.sharing as src_SHARING
+|search src_SHARING$user$
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/configs/conf-macros | fields title eai:acl.app definition args disabled eai:acl.owner eai:acl.sharing definition as dest_definition
+     |rename eai:acl.app as dest_app, definition as dest_definition, args as dest_args, disabled as dest_disabled, eai:acl.owner as dest_owner,eai:acl.sharing as dest_SHARING
+     |search dest_SHARING$user$
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
+| search src_APP IN ($include$)]]>
+</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- END OF BASE SEARCHES-->
+  <label>Content Validation V2</label>
+  <description>Last Update: MM/DD/YYYY</description>
+  <!-- INPUTS -->
+  <fieldset submitButton="false">
+    <input type="dropdown" token="lookup" searchWhenChanged="true">
+      <label>Environment</label>
+      <fieldForLabel>stack</fieldForLabel>
+      <fieldForValue>stack</fieldForValue>
+      <search>
+        <query>|rest splunk_server=local services/server/info |fields serverName | rex field=serverName ".*?\.(?&lt;stack&gt;.*?)\." |fields stack</query>
+        <earliest>-15m</earliest>
+        <latest>now</latest>
+      </search>
+
+    </input>
+    <input type="dropdown" token="include" searchWhenChanged="true">
+      <label>Include</label>
+      <default>*</default>
+      <choice value="*">All</choice>
+    </input>
+    <input type="radio" token="user" searchWhenChanged="true">
+      <label>Content</label>
+      <choice value="=*">All Content</choice>
+      <choice value="!=user">No User Content</choice>
+      <choice value="=user">User Content Only</choice>
+      <default>=*</default>
+      <initialValue>=*</initialValue>
+    </input>
+    <input type="radio" token="missing" searchWhenChanged="true">
+      <label>Missing</label>
+      <choice value="false">True</choice>
+      <choice value="true">False</choice>
+      <default>false</default>
+      <initialValue>false</initialValue>
+      <prefix>"</prefix>
+      <suffix>"</suffix>
+    </input>
+    <input type="checkbox" token="show_savedsearch">
+      <label>Savedsearches</label>
+      <choice value="true">Visible</choice>
+      <initialValue>true</initialValue>
+      <delimiter> </delimiter>
+    </input>
+    <input type="checkbox" token="show_dashboard">
+      <label>Dashboard</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_field_extractions">
+      <label>Field Extractions</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_eventtypes">
+      <label>Eventtypes</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_tags">
+      <label>Tags</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_lookups">
+      <label>Lookups</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_datamodel">
+      <label>Datamodels</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_macros">
+      <label>Macros</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_users">
+      <label>Users</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_apps">
+      <label>Apps</label>
+      <choice value="true">Visible</choice>
+    </input>
+  </fieldset>
+<!-- END OF INPUTS -->
+<!-- SAVED SEARCHES -->
+  <row>
+    <panel depends="$show_savedsearch$">
+      <title>Saved Searches</title>
+      <input type="dropdown" token="app_savedsearch" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="savedsearch">
+          <query>   |search dest=$missing$ src="true"   | fields - *_search   | fields src_APP |dedup src_APP </query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_savedsearch" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="savedsearch">
+          <query>   |search dest=$missing$ src="true"  | fields - *_search    | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Click anywhere and check the saved searches' content comparison</title>
+        <search base="savedsearch">
+          <query>    | search dest=$missing$ src="true"  | fields - *_search  | search src_APP=$app_savedsearch$ NOT src_APP IN ($exclude_savedsearch$)| sort src_APP</query>
+        </search>
+        <option name="count">10</option>
+        <drilldown>
+          <set token="show_savedsearch_comparison">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <!-- COMPARISON -->
+    <panel depends="$show_savedsearch_comparison$,$show_savedsearch$">
+      <title>Saved Searches Comparison</title>
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Equal</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_savedsearch_comparison" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="savedsearch">
+          <query> | search dest="true" src="true" | fields - *_search  | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search base="savedsearch">
+          <query>
+| search dest="true" src="true" 
+| fields title, *_APP, *_search 
+| eval equal = if(src_search==dest_search,1,0) 
+| search equal=$equal$ NOT src_APP IN ($exclude_savedsearch_comparison$)  </query>
+        </search>
+      </table>
+    </panel>
+  </row>
+  <!-- DASHBOARDS -->
+  <row>
+    <panel depends="$show_dashboard$">
+      <title>Dashboards</title>
+      <input type="dropdown" token="app_dashboard" searchWhenChanged="true">
+        <label>Apps</label>
+        <search base="dashboard">
+          <query> | search dest=$missing$ src="true" | fields src_APP |dedup src_APP</query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+      </input>
+      <input type="multiselect" token="exclude_dashboard" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="dashboard">
+          <query>| search dest=$missing$ src="true" | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Click anywhere and check the dashboards' content comparison</title>
+        <search base="dashboard">
+          <query>|fields - *_data | search dest=$missing$ src="true" src_APP=$app_dashboard$ NOT src_APP IN ($exclude_dashboard$)| sort src_APP</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="show_dashboard_comparison">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel depends="$show_dashboard_comparison$,$show_dashboard$">
+      <title>Dashboards comparison</title>
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Similar</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="dropdown" token="lookup" searchWhenChanged="true">
+        <label>Environment</label>
+      </input>
+      <input type="dropdown" token="include" searchWhenChanged="true">
+        <label>Include</label>
+      </input>
+      <input type="multiselect" token="exclude_dashboard_comparison" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="dashboard">
+          <query> | search dest="true" src="true"  | where year=y AND month&gt;=mon AND day&gt;=d |fields - *_data | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <input type="text" token="TIME" searchWhenChanged="true">
+        <label>TIME</label>
+        <prefix>"</prefix>
+        <suffix>"</suffix>
+      </input>
+      <html>
+      <p>FORMAT: MM/DD/YYYY</p>
+      </html>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search base="dashboard">
+          <query>
+            <![CDATA[
+            | search dest="true" src="true"  NOT src_APP IN ($exclude_dashboard_comparison$)
+| where year=y AND month>=mon AND day>=d
+|table title, *_APP, *_SHARING, *_data, *_label,*_owner,*_updated
+]]>
+</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+<!-- FIELD EXTRACTIONS -->
+  <row>
+    <panel depends="$show_field_extractions$">
+      <title>Field Extractions</title>
+      <input type="dropdown" token="app_field" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="field_extractions">
+          <query> | search dest=$missing$ src="true"| sort src_APP |dedup src_APP 
+</query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_field_extractions" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="field_extractions">
+          <query>| search dest=$missing$ src="true"| fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP </query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Click anywhere and check the Field extractions' value comparison</title>
+        <search base="field_extractions">
+          <query>| search dest=$missing$ src="true"| search src_APP=$app_field$ NOT src_APP IN ($exclude_field_extractions$) | sort src_APP</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="show_field_extractions_comparison">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel depends="$show_field_extractions_comparison$,$show_field_extractions$">
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Equal</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="dropdown" token="lookup" searchWhenChanged="true">
+        <label>Environment</label>
+      </input>
+      <input type="dropdown" token="include" searchWhenChanged="true">
+        <label>Include</label>
+      </input>
+      <input type="multiselect" token="exclude_field_extractions_comparison" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="field_extractions">
+          <query> | search dest=true src="true" | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search base="field_extractions">
+          <query>
+            <![CDATA[
+| search dest=true src="true" 
+| fields title, *_APP, *_value 
+| eval equal = if(src_value==dest_value,1,0) 
+| search equal=$equal$ NOT src_APP IN ($exclude_field_extractions_comparison$)
+| sort src_APP
+]]>
+</query>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+<!-- EVENTTYPES -->
+  <row>
+    <panel depends="$show_eventtypes$">
+      <title>Eventtypes</title>
+      <input type="dropdown" token="app_eventtype" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="eventtypes">
+          <query>| search dest=$missing$ src="true"| fields src_APP |dedup src_APP</query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_eventtype" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="eventtypes">
+          <query> | search dest=$missing$ src="true"| fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Click anywhere and check the Eventtypes' value comparison</title>
+        <search base="eventtypes">
+          <query>| search dest=$missing$ src="true"| search src_APP=$app_eventtype$ NOT src_APP IN ($exclude_eventtype$)| sort src_APP</query>
+        </search>
+        <option name="drilldown">cell</option>
+        <drilldown>
+          <set token="show_eventtypes_comparison">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel depends="$show_eventtypes$,$show_eventtypes_comparison$">
+      <title>Eventtypes comparison</title>
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Similar</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="dropdown" token="lookup" searchWhenChanged="true">
+        <label>Environment</label>
+      </input>
+      <input type="dropdown" token="include" searchWhenChanged="true">
+        <label>Include</label>
+      </input>
+      <input type="multiselect" token="exclude_eventtype_comparison" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="eventtypes">
+          <query>| search src=true dest=true  | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search base="eventtypes">
+          <query>
+| search src=true dest=true 
+| sort src_APP
+| fields title, *_APP, *_SEARCH
+| eval equal = if(src_SEARCH==dest_SEARCH,1,0) | search equal=$equal$  NOT src_APP IN ($exclude_eventtype_comparison$) </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+<!-- TAGS -->
+  <row>
+    <panel depends="$show_tags$">
+      <title>Tags</title>
+      <table>
+        <search>
+          <query>| inputlookup $lookup$_all_tags.csv 
+| eval src = "true" 
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/search/tags 
+    | fields title
+    | eval dest="true" ]
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+| search dest=$missing$ src="true" | sort title</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+<!-- LOOKUPS -->
+
+  <row>
+    <panel depends="$show_lookups$">
+      <title>Lookups</title>
+      <input type="dropdown" token="app_lookup" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="lookups">
+          <query>| fields src_APP |dedup src_APP</query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_lookup" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="lookups">
+          <query> | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <search base="lookups">
+          <query>| search src_APP=$app_lookup$ NOT src_APP IN ($exclude_lookup$)| sort  src_APP</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+<!-- DATAMODELS -->
+
+  <row>
+    <panel depends="$show_datamodel$">
+      <title>Datamodels</title>
+      <input type="dropdown" token="app_datamodel" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="datamodel">
+          <query>| fields src_APP |dedup src_APP</query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_datamodel" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="datamodel">
+          <query> | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP </query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <search base="datamodel">
+          <query>|search src_APP=$app_datamodel$ NOT src_APP IN ($exclude_datamodel$)| sort src_APP</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+    <!-- MACROS -->
+  <row>
+    <panel depends="$show_macros$">
+      <title>Macros</title>
+      <input type="dropdown" token="app_macros" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="macros">
+          <query>| search dest=$missing$ src="true"| fields src_APP |dedup src_APP</query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_macros" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="macros">
+          <query> | search dest=$missing$ src="true"| fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <search base="macros">
+          <query>| search dest=$missing$ src="true"|search src_APP=$app_macros$ NOT src_APP IN ($exclude_macros$) | sort src_APP</query>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <option name="drilldown">cell</option>
+        <drilldown>
+          <set token="show_macros_comparison">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel depends="$show_macros_comparison$,$show_macros$">
+      <title>Macros Comparison</title>
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Equal</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="dropdown" token="lookup" searchWhenChanged="true">
+        <label>Environment</label>
+      </input>
+      <input type="dropdown" token="include" searchWhenChanged="true">
+        <label>Include</label>
+      </input>
+      <input type="multiselect" token="exclude_macros_comparison" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="macros">
+          <query>| search dest=true src="true"  | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search base="macros">
+          <query>
+            <![CDATA[
+            | search dest=true src="true" 
+|fields title, *_definition, *_args, *_APP, *_owner, *_sharing
+| eval equal = if(src_definition==dest_definition,1,0) 
+| search equal=$equal$ NOT src_APP IN ($exclude_macros_comparison$)
+| sort src_APP
+]]>
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+    <!-- USERS -->
+  <row>
+    <panel depends="$show_users$">
+      <title>Users</title>
+      <table>
+        <search base="users">
+          <query>| sort title</query>
+        </search>
+        <format type="color" field="src_type">
+          <colorPalette type="map">{"Splunk":#D41F1F}</colorPalette>
+        </format>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <!-- APPS -->
+  <row>
+    <panel depends="$show_apps$">
+      <title>Apps</title>
+      <table>
+        <search>
+          <query>| inputlookup $lookup$_all_apps_src.csv 
+| eval src = "true" 
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/apps/local 
+    | fields label title
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
+| search dest=$missing$ src="true"</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>
