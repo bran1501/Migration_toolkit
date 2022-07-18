@@ -388,7 +388,7 @@ RUN ON-PREM:
       <table>
         <title>Click anywhere and check the dashboards' content comparison</title>
         <search base="dashboard">
-          <query>|fields - *_data | search dest=$missing$ src="true" src_APP=$app_dashboard$ NOT src_APP IN ($exclude_dashboard$)| sort src_APP</query>
+          <query>|fields - *_data day year month | search dest=$missing$ src="true" src_APP=$app_dashboard$ NOT src_APP IN ($exclude_dashboard$)| sort src_APP</query>
         </search>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
