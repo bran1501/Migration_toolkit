@@ -870,7 +870,7 @@ RUN ON-PREM:
       <title>Apps</title>
       <table>
         <search>
-          <query>| inputlookup $lookup$_all_apps_src.csv 
+          <query><![CDATA[| inputlookup $lookup$_all_apps_src.csv  |search NOT title IN (SplunkForwarder,SplunkLightForwarder,framework,splunk_archiver,splunk_monitoring_console)
 | eval src = "true" 
 | append 
     [| rest splunk_server=local /servicesNS/-/-/apps/local 
@@ -878,7 +878,7 @@ RUN ON-PREM:
     | eval dest="true"] 
 | stats values(*) as * by title 
 | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
-| search dest=$missing$ src="true"</query>
+| search dest=$missing$ src="true"]]></query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
         </search>
