@@ -62,7 +62,7 @@ RUN ON-PREM:
   <search id="dashboard">
     <query>
       <![CDATA[| inputlookup $lookup$_all_dashboards.csv |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
-| eval src = "true" , time=$TIME$ |rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+| eval src = "true" 
 | rename eai:acl.app as src_APP, eai:acl.sharing as src_SHARING, disabled as src_disabled, label as src_label, eai:acl.owner as src_owner, eai:data as src_data
 |search src_SHARING$user$
 | append 
@@ -192,7 +192,7 @@ RUN ON-PREM:
   </search>
   <!-- END OF BASE SEARCHES-->
   <label>Content Validation V2</label>
-  <description>Last Update: MM/DD/YYYY</description>
+  <description>Last Update: 07/07/2022</description>
   <!-- INPUTS -->
   <fieldset submitButton="false">
     <input type="dropdown" token="lookup" searchWhenChanged="true">
@@ -204,13 +204,12 @@ RUN ON-PREM:
         <earliest>-15m</earliest>
         <latest>now</latest>
       </search>
-
     </input>
     <input type="dropdown" token="include" searchWhenChanged="true">
       <label>Include</label>
       <default>*</default>
       <choice value="*">All</choice>
-    </input>
+ </input>
     <input type="radio" token="user" searchWhenChanged="true">
       <label>Content</label>
       <choice value="=*">All Content</choice>
@@ -271,8 +270,9 @@ RUN ON-PREM:
       <choice value="true">Visible</choice>
     </input>
   </fieldset>
-<!-- END OF INPUTS -->
-<!-- SAVED SEARCHES -->
+    <!-- END OF INPUTS -->
+
+  <!-- SAVEDSEARCHES -->
   <row>
     <panel depends="$show_savedsearch$">
       <title>Saved Searches</title>
@@ -336,6 +336,14 @@ RUN ON-PREM:
         <valuePrefix>"</valuePrefix>
         <valueSuffix>"</valueSuffix>
       </input>
+      <input type="link" token="close_savedsearch_comparison">
+        <label>Close Comparison</label>
+        <choice value="Close this panel">Close this panel</choice>
+        <change>
+          <unset token="show_savedsearch_comparison"></unset>
+          <unset token="form.close_savedsearch_comparison"></unset>
+        </change>
+      </input>
       <table>
         <title>Only Knowledge objects on both stacks</title>
         <search base="savedsearch">
@@ -389,6 +397,7 @@ RUN ON-PREM:
         </drilldown>
       </table>
     </panel>
+    <!-- COMPARISON -->
     <panel depends="$show_dashboard_comparison$,$show_dashboard$">
       <title>Dashboards comparison</title>
       <input type="radio" token="equal" searchWhenChanged="true">
@@ -426,11 +435,20 @@ RUN ON-PREM:
       <html>
       <p>FORMAT: MM/DD/YYYY</p>
       </html>
+            <input type="link" token="close_dashboard_comparison">
+        <label>Close Comparison</label>
+        <choice value="Close this panel">Close this panel</choice>
+        <change>
+          <unset token="show_dashboard_comparison"></unset>
+          <unset token="form.close_dashboard_comparison"></unset>
+        </change>
+      </input>
       <table>
         <title>Only Knowledge objects on both stacks</title>
         <search base="dashboard">
           <query>
             <![CDATA[
+            |eval time=$TIME$ |rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
             | search dest="true" src="true"  NOT src_APP IN ($exclude_dashboard_comparison$)
 | where year=y AND month>=mon AND day>=d
 |table title, *_APP, *_SHARING, *_data, *_label,*_owner,*_updated
@@ -442,7 +460,7 @@ RUN ON-PREM:
       </table>
     </panel>
   </row>
-<!-- FIELD EXTRACTIONS -->
+  <!-- FIELDS EXTRACTIOINS -->
   <row>
     <panel depends="$show_field_extractions$">
       <title>Field Extractions</title>
@@ -484,6 +502,7 @@ RUN ON-PREM:
         </drilldown>
       </table>
     </panel>
+    <!-- COMPARISON -->
     <panel depends="$show_field_extractions_comparison$,$show_field_extractions$">
       <input type="radio" token="equal" searchWhenChanged="true">
         <label>Equal</label>
@@ -512,6 +531,14 @@ RUN ON-PREM:
         <valuePrefix>"</valuePrefix>
         <valueSuffix>"</valueSuffix>
       </input>
+                  <input type="link" token="close_field_extractions_comparison">
+        <label>Close Comparison</label>
+        <choice value="Close this panel">Close this panel</choice>
+        <change>
+          <unset token="show_field_extractions_comparison"></unset>
+          <unset token="form.close_field_extractions_comparison"></unset>
+        </change>
+      </input>
       <table>
         <title>Only Knowledge objects on both stacks</title>
         <search base="field_extractions">
@@ -529,7 +556,8 @@ RUN ON-PREM:
       </table>
     </panel>
   </row>
-<!-- EVENTTYPES -->
+  <!-- EVENTTYPES -->
+
   <row>
     <panel depends="$show_eventtypes$">
       <title>Eventtypes</title>
@@ -569,6 +597,7 @@ RUN ON-PREM:
         </drilldown>
       </table>
     </panel>
+    <!-- COMPARISON -->
     <panel depends="$show_eventtypes$,$show_eventtypes_comparison$">
       <title>Eventtypes comparison</title>
       <input type="radio" token="equal" searchWhenChanged="true">
@@ -598,6 +627,14 @@ RUN ON-PREM:
         <valuePrefix>"</valuePrefix>
         <valueSuffix>"</valueSuffix>
       </input>
+                  <input type="link" token="close_eventtypes_comparison">
+        <label>Close Comparison</label>
+        <choice value="Close this panel">Close this panel</choice>
+        <change>
+          <unset token="show_eventtypes_comparison"></unset>
+          <unset token="form.close_eventtypes_comparison"></unset>
+        </change>
+      </input>
       <table>
         <title>Only Knowledge objects on both stacks</title>
         <search base="eventtypes">
@@ -612,7 +649,8 @@ RUN ON-PREM:
       </table>
     </panel>
   </row>
-<!-- TAGS -->
+    <!-- TAGS -->
+
   <row>
     <panel depends="$show_tags$">
       <title>Tags</title>
@@ -634,8 +672,7 @@ RUN ON-PREM:
       </table>
     </panel>
   </row>
-<!-- LOOKUPS -->
-
+      <!-- LOOKUPS -->
   <row>
     <panel depends="$show_lookups$">
       <title>Lookups</title>
@@ -673,7 +710,8 @@ RUN ON-PREM:
       </table>
     </panel>
   </row>
-<!-- DATAMODELS -->
+
+  <!-- DATAMODELS -->
 
   <row>
     <panel depends="$show_datamodel$">
@@ -713,6 +751,7 @@ RUN ON-PREM:
     </panel>
   </row>
     <!-- MACROS -->
+
   <row>
     <panel depends="$show_macros$">
       <title>Macros</title>
@@ -752,6 +791,7 @@ RUN ON-PREM:
         </drilldown>
       </table>
     </panel>
+    <!-- COMPARISON -->
     <panel depends="$show_macros_comparison$,$show_macros$">
       <title>Macros Comparison</title>
       <input type="radio" token="equal" searchWhenChanged="true">
@@ -781,6 +821,14 @@ RUN ON-PREM:
         <valuePrefix>"</valuePrefix>
         <valueSuffix>"</valueSuffix>
       </input>
+                        <input type="link" token="close_macros_comparison">
+        <label>Close Comparison</label>
+        <choice value="Close this panel">Close this panel</choice>
+        <change>
+          <unset token="show_macros_comparison"></unset>
+          <unset token="form.close_macros_comparison"></unset>
+        </change>
+      </input>
       <table>
         <title>Only Knowledge objects on both stacks</title>
         <search base="macros">
@@ -800,6 +848,7 @@ RUN ON-PREM:
     </panel>
   </row>
     <!-- USERS -->
+
   <row>
     <panel depends="$show_users$">
       <title>Users</title>
@@ -815,7 +864,7 @@ RUN ON-PREM:
       </table>
     </panel>
   </row>
-  <!-- APPS -->
+    <!-- APPS -->
   <row>
     <panel depends="$show_apps$">
       <title>Apps</title>
