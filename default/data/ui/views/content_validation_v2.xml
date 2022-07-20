@@ -143,7 +143,7 @@ RUN ON-PREM:
 | append 
     [| rest splunk_server=local /servicesNS/-/-/datamodel/model 
     | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing 
-| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, displayName as src_displayName
+| rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, displayName as dest_displayName
 |search dest_SHARING$user$
     | eval dest="true"] 
 | stats values(*) as * by title 
