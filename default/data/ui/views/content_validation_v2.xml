@@ -451,7 +451,7 @@ RUN ON-PREM:
             |eval time=$TIME$ |rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
             | search dest="true" src="true"  NOT src_APP IN ($exclude_dashboard_comparison$)
 | where year=y AND month>=mon AND day>=d
-|table title, *_APP, *_SHARING, *_data, *_label,*_owner,*_updated
+|table title, *_APP, *_SHARING, *_data, *_label,*_owner,updated
 ]]>
 </query>
         </search>
