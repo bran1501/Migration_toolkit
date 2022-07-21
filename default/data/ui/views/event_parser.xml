@@ -35,23 +35,29 @@
   </fieldset>
   <row>
     <panel>
-      <html>
+     <html>
+        <body>
         <h1>MAGIC 8</h1>
-        <p>$EVENT$</p>
-        <p>[$sourcetype$]</p>
-        <p>SHOULD_LINEMERGE = false</p>
-        <p>TIME_PREFIX = $TIME_PREFIX$</p>
-        <p>TIME_FORMAT = $TIME_FORMAT$</p>
-        <p>MAX_TIMESTAMP_LOOKAHEAD = $length$</p>
-        <p>LINE_BREAKER = ([\r\n]+)$LINE_BREAKER$</p>
-        <p>TRUNCATE = $TRUNCATE$</p>
-        <p>KV_MODE = $KV_MODE$</p>
-        <p>ANNOTATE_PUNCT = false</p>
-        <p>-----</p>
+        <pre>$EVENT$</pre>
+        <hr></hr>
+        <pre>
+[$sourcetype$]
+SHOULD_LINEMERGE = false
+TIME_PREFIX = $TIME_PREFIX$
+TIME_FORMAT = $TIME_FORMAT$
+MAX_TIMESTAMP_LOOKAHEAD = $length$
+LINE_BREAKER = ([\r\n]+)$LINE_BREAKER$
+TRUNCATE = $TRUNCATE$
+KV_MODE = $KV_MODE$
+ANNOTATE_PUNCT = false</pre>
+        <hr></hr>
         
         <h1>UF ONLY</h1>
-        <p>EVENT_BREAKER_ENABLE = true</p>
-        <p>EVENT_BREAKER = ([\r\n]+)$LINE_BREAKER$</p>
+        <pre>
+EVENT_BREAKER_ENABLE = true
+EVENT_BREAKER = ([\r\n]+)$LINE_BREAKER$</pre>
+        <hr></hr>
+        </body>
       </html>
     </panel>
   </row>
