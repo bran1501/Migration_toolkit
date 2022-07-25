@@ -195,6 +195,20 @@ RUN ON-PREM:
   <description>Last Update: 07/07/2022</description>
   <!-- INPUTS -->
   <fieldset submitButton="false">
+        <html>
+      <style>
+         .input-checkbox {
+          min-width: 100px !important;
+          width: 100px !important;
+          max-width: 100px !important;
+          }
+          .input-radio {
+          min-width: 80px !important;
+          width: 80px !important;
+          max-width: 80px !important;
+        }        
+      </style>
+    </html>
     <input type="dropdown" token="lookup" searchWhenChanged="true">
       <label>Environment</label>
       <fieldForLabel>stack</fieldForLabel>
