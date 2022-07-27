@@ -192,7 +192,7 @@ RUN ON-PREM:
   </search>
   <!-- END OF BASE SEARCHES-->
   <label>Content Validation V2</label>
-  <description>Last Update: 07/07/2022</description>
+  <description>Last Update: MM/DD/YYYY</description>
   <!-- INPUTS -->
   <fieldset submitButton="false">
         <html>
