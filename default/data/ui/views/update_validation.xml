@@ -97,7 +97,7 @@
   </search>
   <!-- END OF BASE SEARCHES-->
   <label>Update Validation</label>
-  <description>Last Update: MM/DD/YYYY/description>
+  <description>Last Update: 07/13/2022</description>
   <fieldset submitButton="false">
     <input type="dropdown" token="lookup" searchWhenChanged="true">
       <label>Environment</label>
@@ -113,7 +113,7 @@
       <label>Include</label>
       <default>*</default>
       <choice value="*">All</choice>
-    </input>
+   </input>
     <html>
       <p>FORMAT: MM/DD/YYYY</p>
       </html>
