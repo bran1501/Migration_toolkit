@@ -248,9 +248,9 @@ RUN ON-PREM:
         <html>
       <style>
          .input-checkbox {
-          min-width: 50px !important;
-          width: 50px !important;
-          max-width: 50px !important;
+          min-width: 80px !important;
+          width: 80px !important;
+          max-width: 80px !important;
           }
           .input-radio {
           min-width: 80px !important;
