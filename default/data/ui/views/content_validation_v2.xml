@@ -29,11 +29,23 @@ RUN ON-PREM:
 | rest splunk_server=local /servicesNS/-/-/configs/conf-macros | fields title eai:acl.app eai:acl.owner eai:acl.sharing definition args disabled updated
 -> LOOKOUP: $lookup$_all_macros_src.csv 
 
+| rest splunk_server=local /servicesNS/-/-/data/ui/panels |fields eai:acl.owner, eai:acl.app, eai:acl.sharing, eai:data, panel.title, title, updated, disabled
+-> LOOKOUP: $lookup$_all_panels_src.csv 
+
 | rest splunk_server=local /servicesNS/-/-/apps/local | fields label title 
 -> LOOKUP: $lookup$_all_apps_src.csv 
 
 | rest splunk_server=local /servicesNS/-/-/authentication/users | fields email realname title type 
 -> LOOKUP: $lookup$_all_users_src.csv 
+
+| rest /servicesNS/-/-/authorization/roles |fields capabilities, imported_capabilities, imported_roles, title
+-> LOOKUP: $lookup$_all_roles_src.csv 
+
+| rest timeout=600 splunk_server=* splunk_server=IDXs /services/data/distributed-indexes count=0 | search title!="_*" |fields title, updated
+-> LOOKUP: $lookup$_all_indexes_src.csv 
+
+| rest splunk_server=local /servicesNS/-/-/saved/sourcetypes |fields title
+-> LOOKUP: $lookup$_all_sourcetypes_src.csv 
 
 --><form version="1.1">
   <!-- BASE SEARCHES-->
@@ -81,7 +93,7 @@ RUN ON-PREM:
   </search>
   <!-- Field Extractions -->
   <search id="field_extractions">
-    <query>| inputlookup $lookup$_all_field_extraction_src.csv 
+    <query><![CDATA[| inputlookup $lookup$_all_field_extraction_src.csv 
 | eval src = "true" 
 | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, attribute as src_attribute, author as src_author , value as src_value
 |search src_SHARING$user$
@@ -93,13 +105,13 @@ RUN ON-PREM:
     | eval dest="true"] 
 | stats values(*) as * by title 
 | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) |fields - value
-|search  src_APP IN ($include$)</query>
+|search  src_APP IN ($include$)]]></query>
     <earliest>-24h@h</earliest>
     <latest>now</latest>
   </search>
   <!-- Eventtypes-->
   <search id="eventtypes">
-    <query>| inputlookup $lookup$_all_eventtypes_src.csv 
+    <query><![CDATA[| inputlookup $lookup$_all_eventtypes_src.csv 
 | eval src = "true" 
 | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, tags as src_TAGS
 |search src_SHARING$user$
@@ -112,13 +124,13 @@ RUN ON-PREM:
 | stats values(*) as * by title 
 | fields - search 
 | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
-| search  src_APP IN ($include$)</query>
+| search  src_APP IN ($include$)]]></query>
     <earliest>-24h@h</earliest>
     <latest>now</latest>
   </search>
   <!-- Lookups -->
   <search id="lookups">
-    <query>| inputlookup $lookup$_all_lookup_src.csv 
+    <query><![CDATA[| inputlookup $lookup$_all_lookup_src.csv 
 | eval src = "true" 
 | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING 
 |search src_SHARING$user$
@@ -130,13 +142,14 @@ RUN ON-PREM:
     | eval dest="true"] 
 | stats values(*) as * by title 
 | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
-| search dest=$missing$ src="true"  src_APP IN ($include$)</query>
+| search dest=$missing$ src="true"  src_APP IN ($include$)]]></query>
     <earliest>-24h@h</earliest>
     <latest>now</latest>
   </search>
   <!-- Datamodel -->
   <search id="datamodel">
-    <query>| inputlookup $lookup$_all_datamodel_src.csv
+    <query>
+      <![CDATA[inputlookup $lookup$_all_datamodel_src.csv
 | eval src = "true" 
 | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, displayName as src_displayName
 |search src_SHARING$user$
@@ -148,7 +161,7 @@ RUN ON-PREM:
     | eval dest="true"] 
 | stats values(*) as * by title 
 | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
-| search dest=$missing$ src="true"  src_APP IN ($include$)</query>
+| search dest=$missing$ src="true"  src_APP IN ($include$)]]></query>
     <earliest>-24h@h</earliest>
     <latest>now</latest>
   </search>
@@ -190,6 +203,43 @@ RUN ON-PREM:
     <earliest>-24h@h</earliest>
     <latest>now</latest>
   </search>
+      <!-- Panels -->
+  <search id="panels">
+    <query>
+      <![CDATA[| inputlookup $lookup$_all_panels_src.csv 
+| eval src = "true" 
+| rename eai:acl.app as src_APP, disabled as src_disabled, eai:acl.owner as src_owner, eai:acl.sharing as src_SHARING,eai:data as src_data
+|search src_SHARING$user$
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/data/ui/panels |fields eai:acl.owner, eai:acl.app, eai:acl.sharing, eai:data, panel.title, title, disabled
+     |rename eai:acl.app as dest_APP, disabled as dest_disabled, eai:acl.owner as dest_owner,eai:acl.sharing as dest_SHARING, eai:data as dest_data
+     |search dest_SHARING$user$
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
+| search src_APP IN ($include$)]]>
+</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+        <!-- Roles -->
+  <search id="roles">
+    <query>
+      <![CDATA[| inputlookup $lookup$_all_roles_src.csv 
+| rename roles as src_roles , capabilities as src_capabilities, imported_capabilities as src_imported_capabilities, imported_roles as src_imported_roles 
+| eval src = "true" 
+| append 
+    [| rest splunk_server=local /servicesNS/-/-/authorization/roles 
+    | fields capabilities, imported_capabilities, imported_roles, title 
+    | rename roles as dest_roles , capabilities as dest_capabilities, imported_capabilities as dest_imported_capabilities, imported_roles as dest_imported_roles 
+    | eval dest="true"] 
+| stats values(*) as * by title 
+| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
+]]>
+      </query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
   <!-- END OF BASE SEARCHES-->
   <label>Content Validation V2</label>
   <description>Last Update: MM/DD/YYYY</description>
@@ -198,9 +248,9 @@ RUN ON-PREM:
         <html>
       <style>
          .input-checkbox {
-          min-width: 100px !important;
-          width: 100px !important;
-          max-width: 100px !important;
+          min-width: 50px !important;
+          width: 50px !important;
+          max-width: 50px !important;
           }
           .input-radio {
           min-width: 80px !important;
@@ -241,7 +291,7 @@ RUN ON-PREM:
       <prefix>"</prefix>
       <suffix>"</suffix>
     </input>
-    <input type="checkbox" token="show_savedsearch">
+      <input type="checkbox" token="show_savedsearch">
       <label>Savedsearches</label>
       <choice value="true">Visible</choice>
       <initialValue>true</initialValue>
@@ -249,6 +299,10 @@ RUN ON-PREM:
     </input>
     <input type="checkbox" token="show_dashboard">
       <label>Dashboard</label>
+      <choice value="true">Visible</choice>
+    </input>
+        <input type="checkbox" token="show_panels">
+      <label>Panels</label>
       <choice value="true">Visible</choice>
     </input>
     <input type="checkbox" token="show_field_extractions">
@@ -273,6 +327,14 @@ RUN ON-PREM:
     </input>
     <input type="checkbox" token="show_macros">
       <label>Macros</label>
+      <choice value="true">Visible</choice>
+    </input>
+        <input type="checkbox" token="show_sourcetypes">
+      <label>Sourcetypes</label>
+      <choice value="true">Visible</choice>
+    </input>
+        <input type="checkbox" token="show_roles">
+      <label>Roles</label>
       <choice value="true">Visible</choice>
     </input>
     <input type="checkbox" token="show_users">
@@ -471,6 +533,91 @@ RUN ON-PREM:
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  
+  <!-- PANELS -->
+    <row>
+    <panel depends="$show_panels$">
+      <title>Panels</title>
+      <input type="dropdown" token="app_panels" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="panels">
+          <query>   |search dest=$missing$ src="true"   | fields - *_data   | fields src_APP |dedup src_APP </query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_panels" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="panels">
+          <query>   |search dest=$missing$ src="true"  | fields - *_data     | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Click anywhere and check the Panels' content comparison</title>
+        <search base="savedsearch">
+          <query>    | search dest=$missing$ src="true"  | fields - *_data  | search src_APP=$app_panels$ NOT src_APP IN ($exclude_panels$)| sort src_APP</query>
+        </search>
+        <option name="count">10</option>
+        <drilldown>
+          <set token="show_panels_comparison">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+      <!-- COMPARISON -->
+    <panel depends="$show_panels_comparison$,$show_panels$">
+      <title>Panels Comparison</title>
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Equal</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_panels_comparison" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="savedsearch">
+          <query> | search dest="true" src="true" | fields - *_data  | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <input type="link" token="close_panels_comparison">
+        <label>Close Comparison</label>
+        <choice value="Close this panel">Close this panel</choice>
+        <change>
+          <unset token="show_panels_comparison"></unset>
+          <unset token="form.close_panels_comparison"></unset>
+        </change>
+      </input>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search base="panels">
+          <query>
+| search dest="true" src="true" 
+| fields title, *_APP, *_data
+| eval equal = if(src_data==dest_data,1,0) 
+| search equal=$equal$ NOT src_APP IN ($exclude_panels_comparison$)  </query>
+        </search>
       </table>
     </panel>
   </row>
@@ -757,7 +904,7 @@ RUN ON-PREM:
       </input>
       <table>
         <search base="datamodel">
-          <query>|search src_APP=$app_datamodel$ NOT src_APP IN ($exclude_datamodel$)| sort src_APP</query>
+          <query>|fields - description|search src_APP=$app_datamodel$ NOT src_APP IN ($exclude_datamodel$)| sort src_APP</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -861,6 +1008,60 @@ RUN ON-PREM:
       </table>
     </panel>
   </row>
+  
+    <!-- Roles -->
+   <row>
+    <panel depends="$show_roles$">
+      <title>Roles</title>
+      <table>
+        <search base="roles">
+          <query>| search dest=$missing$ src="true"| fields - *_capabilities *_imported_capabilities *_imported_roles</query>
+        </search>
+        <option name="refresh.display">progressbar</option>
+        <option name="drilldown">cell</option>
+        <drilldown>
+          <set token="show_roles_comparison">$click.value$</set>
+        </drilldown>
+      </table>
+    </panel>
+     <!-- COMPARISON -->
+    <panel depends="$show_roles_comparison$,$show_roles$">
+      <title>Macros Comparison</title>
+      <input type="radio" token="equal" searchWhenChanged="true">
+        <label>Equal</label>
+        <choice value="1">True</choice>
+        <choice value="0">False</choice>
+        <default>0</default>
+        <initialValue>0</initialValue>
+      </input>
+      <input type="dropdown" token="lookup" searchWhenChanged="true">
+        <label>Environment</label>
+      </input>
+      <input type="link" token="close_roles_comparison">
+        <label>Close Comparison</label>
+        <choice value="Close this panel">Close this panel</choice>
+        <change>
+          <unset token="show_roles_comparison"></unset>
+          <unset token="form.close_roles_comparison"></unset>
+        </change>
+      </input>
+      <table>
+        <title>Only Knowledge objects on both stacks</title>
+        <search base="roles">
+          <query>
+            <![CDATA[
+            | search dest="true" src="true" 
+| eval equal = if(src_capabilities==dest_capabilities OR src_imported_capabilities==imported_capabilities,1,0) 
+| search equal=$equal$ 
+]]>
+          </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  
     <!-- USERS -->
 
   <row>
@@ -893,6 +1094,31 @@ RUN ON-PREM:
 | stats values(*) as * by title 
 | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
 | search dest=$missing$ src="true"]]></query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <!-- SOURCETYPES -->
+    <row>
+    <panel depends="$show_sourcetypes$">
+      <title>Sourcetypes</title>
+      <table>
+        <search>
+          <query>
+            <![CDATA[
+           | inputlookup $lookup$_all_sourcetypes_src.csv 
+    | eval src = "true"  
+    | append     
+    [| rest splunk_server=local /servicesNS/-/-/saved/sourcetypes |fields title   
+    | eval dest="true"]  
+    | stats values(*) as * by title  
+    | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
+    | search dest="false" src="true"
+    ]]>
+    </query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
         </search>
