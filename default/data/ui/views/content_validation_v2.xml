@@ -47,6 +47,11 @@ RUN ON-PREM:
 | rest splunk_server=local /servicesNS/-/-/saved/sourcetypes |fields title
 -> LOOKUP: $lookup$_all_sourcetypes_src.csv 
 
+
+| rest splunk_server=local /servicesNS/-/-/admin/(SAML|LDAP)-groups | fields title roles type
+-> LOOKUP: $lookup$_all_groups_src.csv
+
+
 --><form version="1.1">
   <!-- BASE SEARCHES-->
   <!-- Saved Searches-->
@@ -335,6 +340,10 @@ RUN ON-PREM:
     </input>
         <input type="checkbox" token="show_roles">
       <label>Roles</label>
+      <choice value="true">Visible</choice>
+    </input>
+          <input type="checkbox" token="show_groups">
+      <label>Groups (SAML/LDAP MAPPING)</label>
       <choice value="true">Visible</choice>
     </input>
     <input type="checkbox" token="show_users">
@@ -1116,7 +1125,35 @@ RUN ON-PREM:
     | eval dest="true"]  
     | stats values(*) as * by title  
     | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
-    | search dest="false" src="true"
+    | search dest=$missing$ src="true"
+    ]]>
+    </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <!-- Groups -->
+      <row>
+    <panel depends="$show_groups$">
+      <title>Groups with roles</title>
+      <table>
+        <search>
+          <query>
+            <![CDATA[
+           | inputlookup $lookup$_all_groups_src.csv 
+    | eval src = "true"  , title = lower(title)
+    | rename roles as src_roles
+    | append     
+    [| rest splunk_server=local /servicesNS/-/-/admin/SAML-groups
+    | fields  title roles
+    | rename roles as dest_roles
+    | eval dest="true",title = lower(title)]  
+    | stats values(*) as * by title  
+    | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
+    | search dest=$missing$ src="true" src_roles!=""
     ]]>
     </query>
           <earliest>-24h@h</earliest>
