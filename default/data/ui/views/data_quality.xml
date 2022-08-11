@@ -4,7 +4,7 @@
     <query>(index=_internal source=*splunkd.log* (log_level=ERROR OR log_level=WARN) (component=AggregatorMiningProcessor OR component=DateParserVerbose OR component=LineBreakingProcessor)) 
 | rex field=_raw "Context: source(::|=)(?&lt;context_source&gt;[^\\|]*?)\\|host(::|=)(?&lt;context_host&gt;[^\\|]*?)\\|(?&lt;context_sourcetype&gt;[^\\|]*?)\\|" 
 | eval data_source=if((isnull(data_source) AND isnotnull(context_source)),context_source,data_source), data_sourcetype=if((isnull(data_sourcetype) AND isnotnull(context_sourcetype)),context_sourcetype,data_sourcetype) | stats c by data_sourcetype,component,_raw,host</query>
-    <earliest>$time.earliest$</earliest>
+   <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
   <description>Christhian Bran(PS)</description>
@@ -22,15 +22,12 @@
     <input type="dropdown" token="index" searchWhenChanged="true">
       <label>Index</label>
       <search>
-        <query>|tstats count where sourcetype=$sourcetype$ by index</query>
+        <query>|tstats count where index=* sourcetype=$sourcetype$ by index |fields index</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
       <fieldForLabel>index</fieldForLabel>
       <fieldForValue>index</fieldForValue>
-      <choice value="*">ALL</choice>
-      <default>*</default>
-      <initialValue>*</initialValue>
     </input>
   </fieldset>
   <row>
@@ -74,7 +71,7 @@
         <option name="refresh.display">progressbar</option>
       </table>
     </panel>
-    <panel>
+    <panel depends="index">
       <table>
         <title>Line Breaker</title>
         <search>
@@ -89,7 +86,7 @@
         </drilldown>
       </table>
     </panel>
-    <panel>
+    <panel depends="index">
       <table>
         <title>LEN RAW | HEAD 10</title>
         <search>
@@ -106,7 +103,7 @@
     </panel>
   </row>
   <row>
-    <panel>
+    <panel depends="index">
       <event>
         <title>Sample Events</title>
         <search>
