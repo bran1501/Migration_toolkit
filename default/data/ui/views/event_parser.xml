@@ -50,7 +50,7 @@ MAX_TIMESTAMP_LOOKAHEAD = $length$
 LINE_BREAKER = ([\r\n]+)$LINE_BREAKER$
 TRUNCATE = $TRUNCATE$
 KV_MODE = $KV_MODE$
-ANNOTATE_PUNCT = false</pre>
+</pre>
         <hr></hr>
         
         <h1>UF ONLY</h1>
