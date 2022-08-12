@@ -23,8 +23,8 @@
       <label>Index</label>
       <search>
         <query>|tstats count where index=* sourcetype=$sourcetype$ by index |fields index</query>
-        <earliest>-24h@h</earliest>
-        <latest>now</latest>
+        <earliest>$time.earliest$</earliest>
+        <latest>$time.latest$</latest>
       </search>
       <fieldForLabel>index</fieldForLabel>
       <fieldForValue>index</fieldForValue>
