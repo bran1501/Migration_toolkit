@@ -75,7 +75,7 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
         <option name="refresh.display">progressbar</option>
       </table>
     </panel>
-    <panel depends="index">
+    <panel depends="$index$">
       <table>
         <title>Line Breaker</title>
         <search>
@@ -90,7 +90,7 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
         </drilldown>
       </table>
     </panel>
-    <panel depends="index">
+    <panel depends="$index$">
       <table>
         <title>LEN RAW | HEAD 10</title>
         <search>
@@ -107,17 +107,21 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
     </panel>
   </row>
   <row>
-    <panel depends="index">
-      <event>
+    <panel depends="$index$">
+      <table>
         <title>Sample Events</title>
         <search>
-          <query>index=$index$ sourcetype=$sourcetype$ | head 100</query>
+          <query>index=$index$ sourcetype=$sourcetype$ 
+| head 100 
+| eval indextime=_indextime 
+| convert ctime(indextime) as indextime 
+| table _raw _time indextime</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
-        <option name="list.drilldown">none</option>
+        <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
-      </event>
+      </table>
     </panel>
   </row>
   <row>
