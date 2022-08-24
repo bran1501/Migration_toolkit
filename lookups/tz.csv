@@ -1,0 +1,6 @@
+TZ,"UTC offset",,"Time zone abbreviation",,"Sourcefile"
+UTC,+00:00,+00:00,GMT,,
+America/New_York,−05:00,−04:00,EST,EDT,northamerica
+America/Chicago,−06:00,−05:00,CST,CDT,northamerica
+America/Denver,−07:00,−06:00,MST,MDT,northamerica
+America/Los_Angeles,−08:00,−07:00,PST,PDT,northamerica
