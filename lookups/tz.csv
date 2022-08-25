@@ -22,6 +22,7 @@ Asia/Tehran,+03:30,,UTC+3:30
 Europe/Moscow,+03:00,,MSK
 Africa/Cairo,+02:00,,EET
 Europe/Brussels,+01:00,+02:00,CET/CEST
+Europe/Dublin,+00:00,+01:00,
 UTC,+00:00,+00:00,UTC
 Atlantic/Azores,-01:00,,UTC-1
 America/Noronha,-02:00,,UTC-2
