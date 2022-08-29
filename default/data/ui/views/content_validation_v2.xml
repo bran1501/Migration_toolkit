@@ -50,7 +50,7 @@ RUN ON-PREM:
 | rest splunk_server=local /servicesNS/-/-/saved/sourcetypes |fields title
 -> LOOKUP: $lookup$_all_sourcetypes_src.csv 
 
-| rest splunk_server=local /servicesNS/-/-/admin/(SAML|LDAP)-groups | fields title roles type
+| rest splunk_server=local /servicesNS/-/-/admin/(SAML|LDAP)-groups | fields title roles type |mvexpand roles
 -> LOOKUP: $lookup$_all_groups_src.csv
 
 --><form version="1.1">
