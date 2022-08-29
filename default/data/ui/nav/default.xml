@@ -1,6 +1,6 @@
 <nav search_view="search" color="#5C6DC0">
 <collection label="Main Comparison Dashboards">
-  <view name="content_validation_v2" default="true"/>
+  <view name="content_validation_v2"  default="true"/>
   <view name="update_validation"/>
   </collection>
 <collection label="Data Validator">
@@ -9,6 +9,9 @@
 <collection label="Useful Dashboards">
   <view name="event_parser"/>
   <view name="data_quality"/>
+  </collection>
+<collection label="On-prem Lookups">
+  <view name="home_kos"/>
   </collection>
 <collection label="Others">
   <view name="search" />
