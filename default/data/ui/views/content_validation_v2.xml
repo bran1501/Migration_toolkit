@@ -293,8 +293,6 @@ RUN ON-PREM:
         <earliest>-15m</earliest>
         <latest>now</latest>
       </search>
-      <default>ford-qa</default>
-      <initialValue>ford-qa</initialValue>
     </input>
     <input type="multiselect" token="include" searchWhenChanged="true">
       <label>Include</label>
