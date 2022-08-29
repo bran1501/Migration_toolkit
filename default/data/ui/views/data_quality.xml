@@ -1,4 +1,5 @@
 <form version="1.1">
+  <!-- BASE SEARCHES -->
   <label>Data Quality</label>
   <search id="base1">
     <query>
@@ -11,6 +12,21 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
     <earliest>$time.earliest$</earliest>
     <latest>$time.latest$</latest>
   </search>
+  <search id="main">
+    <query>
+      <![CDATA[
+      index=$index$ sourcetype=$sourcetype$ 
+| fields _raw _indextime _time source host index
+|eval delay_hrs=round((_time-_indextime)/60/60,2)
+| convert ctime(_indextime) as indextime 
+| stats values(host) as host values(source) as source values(_time) as _time values(indextime) as indextime values(index) as index values(delay_hrs) as delay_hrs by _raw 
+
+      ]]>
+    </query>
+    <earliest>$time.earliest$</earliest>
+    <latest>$time.latest$</latest>
+  </search>
+  <!-- END OF BASE SEARCHES -->
   <description>Christhian Bran(PS)</description>
   <fieldset submitButton="false">
     <input type="text" token="sourcetype" searchWhenChanged="true">
@@ -26,7 +42,7 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
     <input type="dropdown" token="index" searchWhenChanged="true">
       <label>Index</label>
       <search>
-        <query>|tstats count where index=* sourcetype=$sourcetype$ by index |fields index</query>
+        <query>|tstats count where index=* OR index=_* sourcetype=$sourcetype$ by index |fields index</query>
         <earliest>$time.earliest$</earliest>
         <latest>$time.latest$</latest>
       </search>
@@ -37,6 +53,13 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
   <row>
     <panel>
       <title>Sourcetypes by Hosts and their type</title>
+      <html>
+          <style>
+          #smalltable{
+            width:25% !important;
+          }
+        </style>
+        </html>
       <table>
         <search>
           <query>index=_internal source=*metrics.log group=per_sourcetype_thruput series="$sourcetype$" (host=idm*.splunkcloud.com OR host!=*splunkcloud.com) 
@@ -105,6 +128,46 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
         </drilldown>
       </table>
     </panel>
+    <panel depends="$index$">
+      <table>
+        <title>Sources</title>
+        <search base="main">
+          <query>|stats values(source) as sources </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel depends="$index$">
+      <table>
+        <title>Hosts</title>
+        <search base="main">
+          <query>|stats values(host) as host </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel depends="$index$">
+      <single>
+        <title>Index</title>
+        <search base="main">
+          <query>|stats values(index) as index </query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel depends="$index$">
+      <single>
+        <title>Delay</title>
+        <search base="main">
+          <query>|stats max(delay_hrs) as delay_hrs</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
   </row>
   <row>
     <panel depends="$index$">
@@ -115,13 +178,36 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
 | head 100 
 | eval indextime=_indextime 
 | convert ctime(indextime) as indextime 
-| table _raw _time indextime</query>
+| table _raw source host _time indextime</query>
           <earliest>$time.earliest$</earliest>
           <latest>$time.latest$</latest>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$index$">
+      <input type="dropdown" token="time_index" searchWhenChanged="true">
+        <label>Time Range Picker(indextime)</label>
+        <default>-15min</default>
+        <choice value="-15min">Last 15 mins</choice>
+        <choice value="-1h">Last Hour</choice>
+        <choice value="-12h">Last 12 Hours</choice>
+        <choice value="-24h">Last 24 Hours</choice>
+        <initialValue>-15min</initialValue>
+      </input>
+      <event>
+        <title>_IndexTime Sample Events $time_index$</title>
+        <search>
+          <query>index=$index$ sourcetype=$sourcetype$ _index_latest=now _index_earliest=$time_index$ |head 10</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="list.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </event>
     </panel>
   </row>
   <row>
@@ -178,26 +264,6 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
   </row>
   <row>
     <panel>
-      <table>
-        <title>Hosts with Line Breaking Errors</title>
-        <search base="base1">
-          <query>|search data_sourcetype=$sourcetype$ component=LineBreakingProcessor | rex "data_host=\"(?&lt;data_host&gt;.*?)\""  |stats c by data_host | fields - c</query>
-        </search>
-        <option name="drilldown">none</option>
-      </table>
-    </panel>
-    <panel>
-      <table>
-        <title>Hosts from Time issues</title>
-        <search base="base1">
-          <query>| search data_sourcetype=$sourcetype$ component=DateParserVerbose | rex "\|host\=(?&lt;data_host&gt;.*?)\|" | stats c by data_host | fields - c</query>
-        </search>
-        <option name="drilldown">none</option>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
       <single>
         <title>Max Length of Line Breaking error</title>
         <search base="base1">
@@ -207,8 +273,6 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
         <option name="refresh.display">progressbar</option>
       </single>
     </panel>
-  </row>
-  <row>
     <panel>
       <chart>
         <title>$sourcetype$ Errors</title>
