@@ -4,7 +4,7 @@
     "title": "Knowledge Objects Sync(KOS)",
     "id": {
       "group": null,
-      "name": "ko_checklist-main",
+      "name": "ko_checklist",
       "version": "2.0.1"
     },
     "author": [
