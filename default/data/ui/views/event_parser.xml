@@ -35,7 +35,7 @@
   </fieldset>
   <row>
     <panel>
-     <html>
+      <html>
         <body>
         <h1>MAGIC 8</h1>
         <pre>$EVENT$</pre>
