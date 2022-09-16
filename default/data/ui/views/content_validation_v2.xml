@@ -120,16 +120,16 @@ RUN ON-PREM:
   <search id="eventtypes">
     <query>| inputlookup $lookup$_all_eventtypes_src.csv 
 | eval src = "true" 
-| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, tags as src_TAGS
+| rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, tags as src_TAGS, search as src_SEARCH
 |search src_SHARING$user$
 | append 
     [| rest splunk_server=local servicesNS/-/-/saved/eventtypes 
     | fields eai:acl.app,eai:acl.owner,eai:acl.sharing,search,tags,title 
-    | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, tags as dest_TAGS
+    | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, tags as dest_TAGS, search as dest_SEARCH
     |search dest_SHARING$user$
     | eval dest="true"] 
 | stats values(*) as * by title 
-| fields - search 
+
 | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
 | search  src_APP IN ($include$)</query>
     <earliest>-24h@h</earliest>
@@ -381,6 +381,11 @@ RUN ON-PREM:
     </input>
     <input type="checkbox" token="show_apps">
       <label>Apps</label>
+      <choice value="true">Visible</choice>
+    </input>
+        </input>
+        <input type="checkbox" token="show_indexes">
+      <label>Indexes</label>
       <choice value="true">Visible</choice>
     </input>
   </fieldset>
@@ -775,7 +780,7 @@ RUN ON-PREM:
       <table>
         <title>Click anywhere and check the Eventtypes' value comparison</title>
         <search base="eventtypes">
-          <query>| search dest=$missing$ src="true"| search src_APP=$app_eventtype$ NOT src_APP IN ($exclude_eventtype$)| sort src_APP</query>
+          <query>| fields - *_SEARCH| search dest=$missing$ src="true"| search src_APP=$app_eventtype$ NOT src_APP IN ($exclude_eventtype$)| sort src_APP</query>
         </search>
         <option name="drilldown">cell</option>
         <drilldown>
@@ -1227,6 +1232,30 @@ RUN ON-PREM:
     | stats values(*) as * by title  
     | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
     | search dest=$missing$ src="true" src_roles!=""
+    ]]>
+    </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+    <row>
+    <panel depends="$show_indexes$">
+      <title>Indexes</title>
+      <table>
+        <search>
+          <query>
+            <![CDATA[
+           | inputlookup $lookup$_all_indexes_src.csv 
+    | eval src = "true"  
+    | append     
+    [| rest splunk_server=local /services/data/indexes | search title!="_*" |fields title    
+    | eval dest="true"]  
+    | stats values(*) as * by title  
+    | eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest)
+    | search dest=$missing$ src="true"
     ]]>
     </query>
           <earliest>-24h@h</earliest>
