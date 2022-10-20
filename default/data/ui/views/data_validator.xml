@@ -6,6 +6,13 @@ COPY THE RESULT
 For the list of buckets:
 | dbinspect index=* | search state!=hot | dedup bucketId | rex field=bucketId "(?<index>[^~]+)~(?<bid>.*)" | table *
 
+Check all unique buckets
+| inputlookup $lookup$
+    | rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$"
+    | fields bucketId, id, bkt, idx
+    | stats dc(id) as "Total Buckets" by idx
+    
+
 --><form version="1.1" theme="dark">
   <!--Base searches-->\
   
@@ -95,20 +102,29 @@ For the list of buckets:
         <option name="drilldown">none</option>
       </single>
     </panel>
+            <panel>
+      <single>
+        <title>Total Frozen Buckets</title>
+        <search base="base1">
+          <query>| search state="frozen" | stats c(id)</query>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
     <panel>
       <single>
         <title>Total $idx$ buckets</title>
         <search>
-          <query>| inputlookup $lookup$
+           <query>| inputlookup $lookup$
     | rex field="bucketId" "(?&lt;idx&gt;.*?)~\d+~(?&lt;bkt&gt;.*?)$" 
     | fields bucketId, id, bkt 
     | search bucketId=$idx$~* 
-    | dedup id 
-    | stats c(id) as "Total Buckets"</query>
+    | stats dc(id) as "Total Buckets"</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
         </search>
         <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
       </single>
     </panel>
   </row>
