@@ -1,9 +1,8 @@
 <form version="1.1">
-
-  <label>Home Page</label>
-  <description>Please type all the respective values</description>
+  <label>Home Page (On-prem Only)</label>
+  <description>Please Select the Environment name, fill up the on-prem Indexer Name and Authentication</description>
   <fieldset submitButton="false">
-        <input type="dropdown" token="lookup" searchWhenChanged="true">
+    <input type="dropdown" token="lookup" searchWhenChanged="true">
       <label>Environment</label>
       <fieldForLabel>stack</fieldForLabel>
       <fieldForValue>stack</fieldForValue>
@@ -21,7 +20,6 @@
     </input>
   </fieldset>
   <row>
-
     <panel>
       <html>
         
@@ -48,28 +46,28 @@
                                 Dashboards
                             </a>
                             <pre>$lookup$_all_dashboards.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
                          <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fsaved%2Fsearches%20%7C%20fields%20eai%3Aacl.app%20title%20is_scheduled%20eai%3Aacl.owner%20eai%3Aacl.sharing%20search%20updated" target="_blank">
                                 Saved Searches
                             </a>
                             <pre>$lookup$_all_saved_searches_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
                            <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fdata%2Fprops%2Fextractions%20%7C%20fields%20title%20eai%3Aacl.app%2C%20eai%3Aacl.owner%2Ceai%3Aacl.sharing%20author%20attribute%20value%20updated" target="_blank">
                                 Field Extractions
                             </a>
                             <pre>$lookup$_all_field_extraction_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>    
                                                 <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20servicesNS%2F-%2F-%2Fsaved%2Feventtypes%20%7C%20fields%20eai%3Aacl.app%2Ceai%3Aacl.owner%2Ceai%3Aacl.sharing%2Csearch%2Ctags%2Ctitle%2C%20updated">
                                 Eventtypes
                             </a>
                             <pre>$lookup$_all_eventtypes_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p> 
                         </div>
                         <div class="column">
@@ -79,14 +77,14 @@
     
                             </a>
                             <pre>$lookup$_all_tags.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p> 
                                                 <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fdatamodel%2Fmodel%20%7C%20fields%20title%20eai%3Aacl.app%2C%20eai%3Aacl.owner%2Ceai%3Aacl.sharing%2Cdescription%2Cupdated" target="_blank">
                                 Datamodels
                             </a>
                             <pre>$lookup$_all_datamodel_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p> 
                       
                         <p style="padding-top: 5px">
@@ -94,13 +92,13 @@
                                 Lookups
                             </a>
                             <pre>$lookup$_all_lookup_src.csv </pre>
-                            <hr></hr>
+                            <hr/>
                         </p>                        <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fconfigs%2Fconf-macros%20%7C%20fields%20title%20eai%3Aacl.app%20eai%3Aacl.owner%20eai%3Aacl.sharing%20definition%20args%20disabled%20updated" target="_blank">
                                 Macros
                             </a>
                             <pre>$lookup$_all_macros_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p> 
                         </div>
                         <div class="column">
@@ -109,21 +107,21 @@
                                 Panels
                             </a>
                             <pre>$lookup$_all_panels_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
                                                 <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fapps%2Flocal%20%7C%20fields%20label%20title" target="_blank">
                                 Apps
                             </a>
                             <pre>$lookup$_all_apps_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
                                                 <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fauthentication%2Fusers%20%7C%20fields%20email%20realname%20title%20type" target="_blank">
                                 Users
                             </a>
                             <pre>$lookup$_all_users_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
 
                                                 <p style="padding-top: 5px">
@@ -131,7 +129,7 @@
                                 Roles
                             </a>
                             <pre>$lookup$_all_roles_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
                          </div>
                         <div class="column">
@@ -140,21 +138,21 @@
                                 Allowed Indexes
                             </a>
                             <pre>$lookup$_all_roles_src_indexes.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
                  <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3D$idx$%20%2Fservices%2Fdata%2Findexes%20%7C%20search%20title!%3D&quot;_*&quot;%20%7Cfields%20title%2C%20updated" target="_blank">
                                 Indexes
                             </a>
                             <pre>$lookup$_all_indexes_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                   </p>
                    <p style="padding-top: 5px">
                             <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fsaved%2Fsourcetypes%20%7Cfields%20title" target="_blank">
                                 Sourcetypes
                             </a>
                             <pre>$lookup$_all_sourcetypes_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
                         </p>
                         
                    <p style="padding-top: 5px">
@@ -162,7 +160,7 @@
                                 $type$
                             </a>
                             <pre>$lookup$_all_groups_src.csv</pre>
-                            <hr></hr>
+                            <hr/>
     </p>
                       </div>
                     </div>
