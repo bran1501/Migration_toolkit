@@ -3,11 +3,11 @@
   <!-- Saved Searches-->
   <search id="savedsearch">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_saved_searches_src.csv |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
-    |eval  time=$TIME$ | rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+      <![CDATA[| inputlookup $lookup$_all_saved_searches_src.csv 
+    |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
 | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING updated as src_updated
 | fields - search 
-| search src_APP IN ($include$) src_SHARING$user$| where year=y AND month>=mon AND day>=d
+| search src_APP IN ($include$) src_SHARING$user$| where updated_epoch>=epoch_time
 | table title src_* 
 ]]>
 </query>
@@ -17,11 +17,11 @@
   <!-- Dashboards-->
   <search id="dashboard">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_dashboards.csv |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
-        |eval  time=$TIME$ | rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+      <![CDATA[| inputlookup $lookup$_all_dashboards.csv
+        |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
     | rename eai:acl.app as src_APP, eai:acl.sharing as src_SHARING, disabled as src_disabled, label as src_label, eai:acl.owner as src_owner updated as src_updated
 | fields - eai:data
-| search src_APP IN ($include$) src_SHARING$user$ | where year=y AND month>=mon AND day>=d
+| search src_APP IN ($include$) src_SHARING$user$ | where updated_epoch>=epoch_time
 | table title src_* 
 ]]>
 </query>
@@ -31,11 +31,11 @@
   <!-- Field Extractions -->
   <search id="field_extractions">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_field_extraction_src.csv  |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
-          |eval  time=$TIME$ | rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+      <![CDATA[| inputlookup $lookup$_all_field_extraction_src.csv
+          |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
       | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, attribute as src_attribute, author as src_author  updated as src_updated 
 |fields - value
-| search src_APP IN ($include$) src_SHARING$user$| where year=y AND month>=mon AND day>=d
+| search src_APP IN ($include$) src_SHARING$user$| where updated_epoch>=epoch_time
 | table title src_* 
 ]]>
 </query>
@@ -45,10 +45,10 @@
   <!-- Eventtypes-->
   <search id="eventtypes">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_eventtypes_src.csv  |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
-        |eval  time=$TIME$ | rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+      <![CDATA[| inputlookup $lookup$_all_eventtypes_src.csv
+        |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
     | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, tags as src_TAGS updated as src_updated
-| search   src_APP IN ($include$) src_SHARING$user$| where year=y AND month>=mon AND day>=d
+| search   src_APP IN ($include$) src_SHARING$user$| where updated_epoch>=epoch_time
 | table title src_* 
 ]]>
 </query>
@@ -58,10 +58,10 @@
   <!-- Lookups -->
   <search id="lookups">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_lookup_src.csv  |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
+      <![CDATA[| inputlookup $lookup$_all_lookup_src.csv 
+          |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
       | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING updated as src_updated
-    |eval  time=$TIME$ | rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
-| search   src_APP IN ($include$) src_SHARING$user$| where year=y AND month>=mon AND day>=d
+| search   src_APP IN ($include$) src_SHARING$user$| where updated_epoch>=epoch_time
 | table title src_* 
 ]]>
 </query>
@@ -71,10 +71,10 @@
   <!-- Datamodel -->
   <search id="datamodel">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_datamodel_src.csv |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
-    |eval  time=$TIME$ | rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+      <![CDATA[| inputlookup $lookup$_all_datamodel_src.csv 
+    |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
 | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, displayName as src_displayName updated as src_updated
-| search  src_APP IN ($include$) src_SHARING$user$| where year=y AND month>=mon AND day>=d
+| search  src_APP IN ($include$) src_SHARING$user$| where updated_epoch>=epoch_time
 | table title src_* 
 ]]>
 </query>
@@ -84,11 +84,25 @@
   <!-- Macros -->
   <search id="macros">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_macros_src.csv  |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
-          |eval  time=$TIME$ | rex field=time "(?<mon>\d{1,2})\/(?<d>\d{1,2})\/(?<y>\d+)" 
+      <![CDATA[| inputlookup $lookup$_all_macros_src.csv
+          |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
 | rename eai:acl.app as src_APP, definition as src_definition, args as src_args, disabled as src_disabled, eai:acl.owner as src_owner, eai:acl.sharing as src_sharing updated as src_updated
+| search  src_APP IN ($include$) src_sharing$user$
+| where updated_epoch>=epoch_time
+| table title src_* 
+]]>
+</query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <!-- Panels -->
+  <search id="panels">
+    <query>
+      <![CDATA[| inputlookup $lookup$_all_panels_src.csv 
+      |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
+| rename eai:acl.app as src_APP, disabled as src_disabled, eai:acl.owner as src_owner, eai:acl.sharing as src_SHARING,eai:data as src_data updated as src_updated
 | search  src_APP IN ($include$) src_SHARING$user$
-| where year=y AND month>=mon AND day>=d
+| where updated_epoch>=epoch_time
 | table title src_* 
 ]]>
 </query>
@@ -97,7 +111,7 @@
   </search>
   <!-- END OF BASE SEARCHES-->
   <label>Update Validation</label>
-  <description>Last Update: 07/13/2022</description>
+  <description>Last Update: DATE</description>
   <fieldset submitButton="false">
     <input type="dropdown" token="lookup" searchWhenChanged="true">
       <label>Environment</label>
@@ -109,11 +123,11 @@
         <latest>now</latest>
       </search>
     </input>
-    <input type="dropdown" token="include" searchWhenChanged="true">
+    <input type="multiselect" token="include" searchWhenChanged="true">
       <label>Include</label>
       <default>*</default>
       <choice value="*">All</choice>
-   </input>
+    </input>
     <html>
       <p>FORMAT: MM/DD/YYYY</p>
       </html>
@@ -121,7 +135,7 @@
       <label>TIME</label>
       <prefix>"</prefix>
       <suffix>"</suffix>
-      <default>07/07/2022</default>
+      <default>MM/DD/YYY</default>
     </input>
     <input type="radio" token="user" searchWhenChanged="true">
       <label>Content</label>
@@ -139,6 +153,10 @@
     </input>
     <input type="checkbox" token="show_dashboard">
       <label>Dashboard</label>
+      <choice value="true">Visible</choice>
+    </input>
+    <input type="checkbox" token="show_panels">
+      <label>Panels</label>
       <choice value="true">Visible</choice>
     </input>
     <input type="checkbox" token="show_field_extractions">
@@ -163,14 +181,6 @@
     </input>
     <input type="checkbox" token="show_macros">
       <label>Macros</label>
-      <choice value="true">Visible</choice>
-    </input>
-    <input type="checkbox" token="show_users">
-      <label>Users</label>
-      <choice value="true">Visible</choice>
-    </input>
-    <input type="checkbox" token="show_apps">
-      <label>Apps</label>
       <choice value="true">Visible</choice>
     </input>
   </fieldset>
@@ -207,7 +217,7 @@
         <search base="savedsearch">
           <query>| search src_APP=$app_savedsearch$ NOT src_APP IN ($exclude_savedsearch$)| sort src_APP</query>
         </search>
-        <option name="count">10</option>
+        <option name="count">100</option>
       </table>
     </panel>
   </row>
@@ -244,8 +254,46 @@
         <search base="dashboard">
           <query>|search src_APP=$app_dashboard$ NOT src_APP IN ($exclude_dashboard$)| sort src_APP</query>
         </search>
+        <option name="count">100</option>
         <option name="drilldown">cell</option>
         <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$show_panels$">
+      <title>Panels</title>
+      <input type="dropdown" token="app_panels" searchWhenChanged="true">
+        <label>App</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="panels">
+          <query>   |search dest=$missing$ src="true"   | fields src_APP |dedup src_APP </query>
+        </search>
+        <choice value="*">All</choice>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="multiselect" token="exclude_panels" searchWhenChanged="true">
+        <label>Exclude</label>
+        <fieldForLabel>src_APP</fieldForLabel>
+        <fieldForValue>src_APP</fieldForValue>
+        <search base="panels">
+          <query>   |search dest=$missing$ src="true"  | fields src_APP |mvexpand src_APP |dedup src_APP |sort src_APP</query>
+        </search>
+        <choice value="">none</choice>
+        <default></default>
+        <delimiter> ,</delimiter>
+        <initialValue></initialValue>
+        <valuePrefix>"</valuePrefix>
+        <valueSuffix>"</valueSuffix>
+      </input>
+      <table>
+        <title>Click anywhere and check the Panels' content comparison</title>
+        <search base="panels">
+          <query>  | fields - *_data  | search src_APP=$app_panels$ NOT src_APP IN ($exclude_panels$)| sort src_APP</query>
+        </search>
+        <option name="count">100</option>
       </table>
     </panel>
   </row>
@@ -329,15 +377,17 @@
       <title>Tags</title>
       <table>
         <search>
-          <query>| inputlookup $lookup$_all_tags.csv 
-| eval src = "true" 
-| append 
-    [| rest splunk_server=local /servicesNS/-/-/search/tags 
-    | fields title
-    | eval dest="true" ]
-| stats values(*) as * by title 
-| eval src = if(isnull(src), "false", src), dest = if(isnull(dest), "false", dest) 
-| search dest=$missing_tags$ src="true" | sort title</query>
+          <query>
+            <![CDATA[
+            | inputlookup $lookup$_all_tags.csv 
+          |rename updated as src_updated 
+                    |eval  time=$TIME$, epoch_time = strptime(time,"%m/%d/%Y"), updated_epoch = strptime(updated,"%Y-%m-%d") 
+                    | sort title
+                  | where updated_epoch>=epoch_time
+                  |fields title src_*
+                  
+                    ]]>
+                    </query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
         </search>
@@ -449,7 +499,7 @@
       </input>
       <table>
         <search base="macros">
-          <query>|search src_APP=$app_macros$ NOT src_APP IN ($exclude_macros$) | sort src_APP</query>
+          <query>|fields - src_definition src_args |search src_APP=$app_macros$ NOT src_APP IN ($exclude_macros$) | sort src_APP</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
