@@ -30,7 +30,18 @@
       <choice value="multi">multi</choice>
       <choice value="json">json</choice>
       <choice value="xml">xml</choice>
-      <default>none</default>
+      <default>auto</default>
+      <initialValue>auto</initialValue>
+    </input>
+    <input type="dropdown" token="tz" searchWhenChanged="true">
+      <label>TZ</label>
+      <fieldForLabel>Abbreviation</fieldForLabel>
+      <fieldForValue>TZ</fieldForValue>
+      <search>
+        <query>|inputlookup tz.csv | eval Abbreviation=Abbreviation."/".'UTC offset'</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
     </input>
   </fieldset>
   <row>
@@ -39,7 +50,7 @@
         <body>
         <h1>MAGIC 8</h1>
         <pre>$EVENT$</pre>
-        <hr></hr>
+        <hr/>
         <pre>
 [$sourcetype$]
 SHOULD_LINEMERGE = false
@@ -51,13 +62,27 @@ LINE_BREAKER = ([\r\n]+)$LINE_BREAKER$
 TRUNCATE = $TRUNCATE$
 KV_MODE = $KV_MODE$
 </pre>
-        <hr></hr>
+<hr>
+<pre>
+TZ = $tz$
+</pre>
+</hr>
+        <hr/>
         
         <h1>UF ONLY</h1>
         <pre>
 EVENT_BREAKER_ENABLE = true
 EVENT_BREAKER = ([\r\n]+)$LINE_BREAKER$</pre>
-        <hr></hr>
+        <hr/>
+        <h1>Without Timestamp</h1>
+        <pre>
+[$sourcetype$]
+SHOULD_LINEMERGE = false
+LINE_BREAKER = ([\r\n]+)$LINE_BREAKER$
+TRUNCATE = $TRUNCATE$
+KV_MODE = $KV_MODE$
+DATETIME_CONFIG = CURRENT
+        </pre>
         </body>
       </html>
     </panel>
