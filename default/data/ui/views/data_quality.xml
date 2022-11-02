@@ -17,7 +17,7 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
       <![CDATA[
       index=$index$ sourcetype=$sourcetype$ 
 | fields _raw _indextime _time source host index
-|eval delay_hrs=round((_time-_indextime)/60/60,2)
+|eval delay_hrs=round((_indextime-_time)/60/60,2)
 | convert ctime(_indextime) as indextime 
 | stats values(host) as host values(source) as source values(_time) as _time values(indextime) as indextime values(index) as index values(delay_hrs) as delay_hrs by _raw 
 
@@ -27,7 +27,7 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
     <latest>$time.latest$</latest>
   </search>
   <!-- END OF BASE SEARCHES -->
-  <description>Christhian Bran(PS)</description>
+  <description></description>
   <fieldset submitButton="false">
     <input type="text" token="sourcetype" searchWhenChanged="true">
       <label>Sourcetype</label>
@@ -132,7 +132,7 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
       <table>
         <title>Sources</title>
         <search base="main">
-          <query>|stats values(source) as sources </query>
+          <query>|stats c by source </query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -142,31 +142,47 @@ index=_internal source=*splunkd.log* log_level IN (ERROR,WARN) component IN (Agg
       <table>
         <title>Hosts</title>
         <search base="main">
-          <query>|stats values(host) as host </query>
+          <query>|stats c by host</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </table>
     </panel>
     <panel depends="$index$">
-      <single>
+      <table>
         <title>Index</title>
         <search base="main">
           <query>|stats values(index) as index </query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
-      </single>
+      </table>
     </panel>
     <panel depends="$index$">
-      <single>
-        <title>Delay</title>
+      <table>
+        <title>Delay Max</title>
         <search base="main">
           <query>|stats max(delay_hrs) as delay_hrs</query>
         </search>
-        <option name="drilldown">none</option>
-        <option name="refresh.display">progressbar</option>
-      </single>
+                <drilldown>
+          <set token="max_delay">$click.value$</set>
+          <link target="_blank">search?q=index=$index$ sourcetype=$sourcetype$| fields _raw _indextime _time host source | eval delay_hrs=round((_indextime-_time)/60/60,2), eval indextime=_indextime 
+| convert ctime(_indextime) as indextime | search delay_hrs="$max_delay$" | table _raw source host _time indextime&amp;earliest=$time.earliest$&amp;latest=$time.latest$&amp;form.click=$max_delay$</link>
+        </drilldown>
+      </table>
+    </panel>
+        <panel depends="$index$">
+      <table>
+        <title>Delay Min</title>
+        <search base="main">
+          <query>|stats min(delay_hrs) as delay_hrs</query>
+        </search>
+                <drilldown>
+          <set token="min_delay">$click.value$</set>
+          <link target="_blank">search?q=index=$index$ sourcetype=$sourcetype$| fields _raw _indextime _time host source | eval delay_hrs=round((_indextime-_time)/60/60,2), eval indextime=_indextime 
+| convert ctime(_indextime) as indextime | search delay_hrs="$min_delay$" | table _raw source host _time&amp;earliest=$time.earliest$&amp;latest=$time.latest$&amp;form.click=$min_delay$</link>
+        </drilldown>
+      </table>
     </panel>
   </row>
   <row>
