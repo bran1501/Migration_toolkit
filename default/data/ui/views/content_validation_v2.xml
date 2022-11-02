@@ -383,7 +383,6 @@ RUN ON-PREM:
       <label>Apps</label>
       <choice value="true">Visible</choice>
     </input>
-        </input>
         <input type="checkbox" token="show_indexes">
       <label>Indexes</label>
       <choice value="true">Visible</choice>
