@@ -1,22 +1,9 @@
 <form version="1.1">
   <label>Home Page (On-prem Only)</label>
-  <description>Please Select the Environment name, fill up the on-prem Indexer Name and Authentication</description>
+  <description>Please Enter your Splunk Cloud stack name. i.e: Splunk Cloud URL: https://kos.splunkcloud.com. kos is your stack name.</description>
   <fieldset submitButton="false">
-    <input type="dropdown" token="lookup" searchWhenChanged="true">
-      <label>Environment</label>
-      <fieldForLabel>stack</fieldForLabel>
-      <fieldForValue>stack</fieldForValue>
-      <search>
-        <query>|rest splunk_server=local services/server/info |fields serverName | rex field=serverName ".*?\.(?&lt;stack&gt;.*?)\." |fields stack</query>
-        <earliest>-15m</earliest>
-        <latest>now</latest>
-      </search>
-    </input>
-    <input type="text" token="idx" searchWhenChanged="true">
-      <label>Indexer</label>
-    </input>
-    <input type="text" token="type" searchWhenChanged="true">
-      <label>Authentication(SAML/LDAP)</label>
+    <input type="text" token="lookup" searchWhenChanged="true">
+      <label>Splunk Cloud Stack Name</label>
     </input>
   </fieldset>
   <row>
@@ -38,134 +25,416 @@
 </style>
 <div style="padding: 10px;">
 <h1>Export Lookups</h1>
-<p>Copy the lookup name for exporting the file</p>
-                          <div class="row">
-                             <div class="column">
-                        <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fdata%2Fui%2Fviews%20%7C%20fields%20eai%3Aacl.sharing%2C%20eai%3Aacl.app%2C%20disabled%2C%20label%2C%20title%2C%20eai%3Aacl.owner%20eai%3Adata%20updated" target="_blank">
-                                Dashboards
-                            </a>
-                            <pre>$lookup$_all_dashboards.csv</pre>
-                            <hr/>
-                        </p>
-                         <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fsaved%2Fsearches%20%7C%20fields%20eai%3Aacl.app%20title%20is_scheduled%20eai%3Aacl.owner%20eai%3Aacl.sharing%20search%20updated" target="_blank">
-                                Saved Searches
-                            </a>
-                            <pre>$lookup$_all_saved_searches_src.csv</pre>
-                            <hr/>
-                        </p>
-                           <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fdata%2Fprops%2Fextractions%20%7C%20fields%20title%20eai%3Aacl.app%2C%20eai%3Aacl.owner%2Ceai%3Aacl.sharing%20author%20attribute%20value%20updated" target="_blank">
-                                Field Extractions
-                            </a>
-                            <pre>$lookup$_all_field_extraction_src.csv</pre>
-                            <hr/>
-                        </p>    
-                                                <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20servicesNS%2F-%2F-%2Fsaved%2Feventtypes%20%7C%20fields%20eai%3Aacl.app%2Ceai%3Aacl.owner%2Ceai%3Aacl.sharing%2Csearch%2Ctags%2Ctitle%2C%20updated">
-                                Eventtypes
-                            </a>
-                            <pre>$lookup$_all_eventtypes_src.csv</pre>
-                            <hr/>
-                        </p> 
-                        </div>
-                        <div class="column">
-                                                <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fsearch%2Ftags%20%7C%20fields%20title%20updated" target="_blank">
-                                Tags
-    
-                            </a>
-                            <pre>$lookup$_all_tags.csv</pre>
-                            <hr/>
-                        </p> 
-                                                <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fdatamodel%2Fmodel%20%7C%20fields%20title%20eai%3Aacl.app%2C%20eai%3Aacl.owner%2Ceai%3Aacl.sharing%2Cdescription%2Cupdated" target="_blank">
-                                Datamodels
-                            </a>
-                            <pre>$lookup$_all_datamodel_src.csv</pre>
-                            <hr/>
-                        </p> 
-                      
-                        <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_Server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fdata%2Flookup-table-files%20%7C%20fields%20title%20eai%3Aacl.app%2C%20eai%3Aacl.owner%2Ceai%3Aacl.sharing%2Cupdated" target="_blank">
-                                Lookups
-                            </a>
-                            <pre>$lookup$_all_lookup_src.csv </pre>
-                            <hr/>
-                        </p>                        <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fconfigs%2Fconf-macros%20%7C%20fields%20title%20eai%3Aacl.app%20eai%3Aacl.owner%20eai%3Aacl.sharing%20definition%20args%20disabled%20updated" target="_blank">
-                                Macros
-                            </a>
-                            <pre>$lookup$_all_macros_src.csv</pre>
-                            <hr/>
-                        </p> 
-                        </div>
-                        <div class="column">
-                        <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fdata%2Fui%2Fpanels%20%7Cfields%20eai%3Aacl.owner%2C%20eai%3Aacl.app%2C%20eai%3Aacl.sharing%2C%20eai%3Adata%2C%20panel.title%2C%20title%2C%20updated%2C%20disabled" target="_blank">
-                                Panels
-                            </a>
-                            <pre>$lookup$_all_panels_src.csv</pre>
-                            <hr/>
-                        </p>
-                                                <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fapps%2Flocal%20%7C%20fields%20label%20title" target="_blank">
-                                Apps
-                            </a>
-                            <pre>$lookup$_all_apps_src.csv</pre>
-                            <hr/>
-                        </p>
-                                                <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fauthentication%2Fusers%20%7C%20fields%20email%20realname%20title%20type" target="_blank">
-                                Users
-                            </a>
-                            <pre>$lookup$_all_users_src.csv</pre>
-                            <hr/>
-                        </p>
+  <div class="row">
+    <div class="column">
+      <p style="padding-top: 5px">
+        <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_dashboards$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_dashboards&amp;outputMode=csv">Dashboards
+        </a>
+          <pre>$lookup$_all_dashboards.csv</pre>
+        <hr/>
+      </p>
+      
+      <p style="padding-top: 5px">
+        <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_saved_searches$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_saved_searches_src&amp;outputMode=csv">Saved Searches
+        </a>
+          <pre>$lookup$_all_saved_searches_src.csv</pre>
+        <hr/>
+      
+      </p>
+        <p style="padding-top: 5px">
+          <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_field_extractions$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_field_extraction_src&amp;outputMode=csv">Field Extractions
+          </a>
+          <pre>$lookup$_all_field_extraction_src.csv</pre>
+        <hr/>
+      
+      </p>    
+        <p style="padding-top: 5px">
+          <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_eventtypes$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_eventtypes_src&amp;outputMode=csv">Eventtypes
+          </a>
+          <pre>$lookup$_all_eventtypes_src.csv</pre>
+        <hr/>
+        
+      </p> 
+  </div>
 
-                                                <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fauthorization%2Froles%20%7Cfields%20capabilities%2C%20imported_capabilities%2C%20imported_roles%2C%20srchIndexesAllowed%2CsrchIndexesDefault%2Ctitle%20%7Cmvexpand%20imported_roles" target="_blank">
-                                Roles
-                            </a>
-                            <pre>$lookup$_all_roles_src.csv</pre>
-                            <hr/>
-                        </p>
-                         </div>
-                        <div class="column">
-                         <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fauthorization%2Froles%20%7C%20fields%20capabilities%2C%20imported_capabilities%2C%20imported_roles%2C%20title%2CsrchIndexesAllowed%2CsrchIndexesDefault%2Ctitle%20%7Cmvexpand%20srchIndexesAllowed" target="_blank">
-                                Allowed Indexes
-                            </a>
-                            <pre>$lookup$_all_roles_src_indexes.csv</pre>
-                            <hr/>
-                        </p>
-                 <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3D$idx$%20%2Fservices%2Fdata%2Findexes%20%7C%20search%20title!%3D&quot;_*&quot;%20%7Cfields%20title%2C%20updated" target="_blank">
-                                Indexes
-                            </a>
-                            <pre>$lookup$_all_indexes_src.csv</pre>
-                            <hr/>
-                  </p>
-                   <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fsaved%2Fsourcetypes%20%7Cfields%20title" target="_blank">
-                                Sourcetypes
-                            </a>
-                            <pre>$lookup$_all_sourcetypes_src.csv</pre>
-                            <hr/>
-                        </p>
-                        
-                   <p style="padding-top: 5px">
-                            <a class="btn btn-primary" href="/app/search/search?q=%7C%20rest%20splunk_server%3Dlocal%20%2FservicesNS%2F-%2F-%2Fadmin%2F$type$-groups%20%7C%20fields%20title%20roles%20type%20%7Cmvexpand%20roles" target="_blank">
-                                $type$
-                            </a>
-                            <pre>$lookup$_all_groups_src.csv</pre>
-                            <hr/>
+  <div class="column">
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_tags$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_tags_src&amp;outputMode=csv">Tags
+      </a>
+        <pre>$lookup$_all_tags_src.csv</pre>
+      <hr/>
     </p>
-                      </div>
-                    </div>
-            </div>
+    
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_datamodels$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_datamodels_src&amp;outputMode=csv">Datamodels
+      </a>
+        <pre>$lookup$_all_datamodel_src.csv</pre>
+      <hr/>
+    </p> 
+    
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_lookups$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_lookups_src&amp;outputMode=csv">Lookups
+      </a>
+        <pre>$lookup$_all_lookup_src.csv </pre>
+      <hr/>
+    </p>                        
+    
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_macros$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_macros_src&amp;outputMode=csv">Macros
+      </a>
+        <pre>$lookup$_all_macros_src.csv</pre>
+      <hr/>
+    </p> 
+  </div>
+  
+  <div class="column">
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_panels$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_panels_src&amp;outputMode=csv">Panels
+      </a>
+        <pre>$lookup$_all_panels_src.csv</pre>
+      <hr/>
+    </p>
+    
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_apps$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_apps_src&amp;outputMode=csv">Apps
+      </a>
+        <pre>$lookup$_all_apps_src.csv</pre>
+      <hr/>
+    </p>
+    
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_users$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_users_src&amp;outputMode=csv">Users
+      </a>
+        <pre>$lookup$_all_users_src.csv</pre>
+      <hr/>
+    </p>
+
+    <p style="padding-top: 5px">
+      <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_roles$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_roles_src&amp;outputMode=csv">Roles
+      </a>
+        <pre>$lookup$_all_roles_src.csv</pre>
+      <hr/>
+    </p>
+  </div>
+  
+  <div class="column">
+   <p style="padding-top: 5px">
+    <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_allowed_indexes_by_roles$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_allowed_indexes_by_role_src&amp;outputMode=csv">Allowed Indexes By Role
+    </a>
+      <pre>$lookup$_allowed_indexes_by_role_src.csv</pre>
+    <hr/>
+   </p>
+   
+   <p style="padding-top: 5px">
+    <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_indexes$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_indexes_src&amp;outputMode=csv">Indexes
+    </a>
+      <pre>$lookup$_all_indexes_src.csv</pre>
+    <hr/>
+  </p>
+  
+  <p style="padding-top: 5px">
+    <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_sourcetypes$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_sourcetypes_src&amp;outputMode=csv">Sourcetypes
+    </a>
+      <pre>$lookup$_all_sourcetypes_src.csv</pre>
+    <hr/>
+  </p>
+                        
+  <p style="padding-top: 5px">
+    <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_authentication_SAML_group$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_authentication_SAML_group_src&amp;outputMode=csv">SAML
+    </a>
+      <pre>$lookup$_all_authentication_SAML_group_src.csv</pre>
+    <hr/>
+  </p>
+  
+  <p style="padding-top: 5px">
+    <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_authentication_LDAP_group$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=$lookup$_all_authentication_LDAP_group_src&amp;outputMode=csv">LDAP
+    </a>
+      <pre>$lookup$_all_authentication_LDAP_group_src.csv</pre>
+    <hr/>
+  </p> 
+</div>
+</div>
+</div>
         </html>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/data/ui/views
+            | fields eai:acl.sharing, eai:acl.app, disabled, label, title, eai:acl.owner eai:data updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_dashboards">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/search/tags 
+            | fields title updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_tags">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/data/ui/panels 
+            | fields eai:acl.owner, eai:acl.app, eai:acl.sharing, eai:data, panel.title, title, updated, disabled
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_panels">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/authorization/roles 
+            | fields capabilities, imported_capabilities, imported_roles, title,srchIndexesAllowed,srchIndexesDefault,title 
+            | mvexpand srchIndexesAllowed
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_allowed_indexes_by_roles">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/saved/searches 
+            | fields eai:acl.app title is_scheduled eai:acl.owner eai:acl.sharing search updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_saved_searches">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/datamodel/model 
+            | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing,description,updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_datamodels">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/apps/local 
+            | fields label title
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_apps">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /services/data/indexes 
+            | search title!="_*" 
+            | fields title, updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_indexes">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/data/props/extractions 
+            | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing author attribute value updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_field_extractions">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_Server=local /servicesNS/-/-/data/lookup-table-files 
+            | fields title eai:acl.app, eai:acl.owner,eai:acl.sharing,updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_lookups">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/authentication/users 
+            | fields email realname title type
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_users">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/saved/sourcetypes 
+            | fields title
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_sourcetypes">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local servicesNS/-/-/saved/eventtypes 
+            | fields eai:acl.app,eai:acl.owner,eai:acl.sharing,search,tags,title, updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_eventtypes">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/configs/conf-macros 
+            | fields title eai:acl.app eai:acl.owner eai:acl.sharing definition args disabled updated
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_macros">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/authorization/roles 
+            | fields capabilities, imported_capabilities, imported_roles, srchIndexesAllowed,srchIndexesDefault,title 
+            | mvexpand imported_roles
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_roles">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/admin/SAML-groups 
+            | fields title roles type 
+            | mvexpand roles
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_authentication_SAML_group">$job.sid$</set>
+          </done>
+        </search>
+      </table>
+    </panel>
+    <panel depends="$hide_panel$">
+      <table>
+        <search>
+          <query>
+            | rest splunk_server=local /servicesNS/-/-/admin/LDAP-groups 
+            | fields title roles type 
+            | mvexpand roles
+          </query>
+          <earliest>-5m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <set token="export_authentication_LDAP_group">$job.sid$</set>
+          </done>
+        </search>
+      </table>
     </panel>
   </row>
 </form>
