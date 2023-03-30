@@ -6,10 +6,6 @@
 <collection label="Data Validator">
   <view name="data_validator"/>
   </collection>
-<collection label="Useful Dashboards">
-  <view name="event_parser"/>
-  <view name="data_quality"/>
-  </collection>
 <collection label="On-prem Lookups">
   <view name="home_kos"/>
   </collection>
