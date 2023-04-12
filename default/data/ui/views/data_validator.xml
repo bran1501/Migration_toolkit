@@ -12,6 +12,27 @@ Check all unique buckets
     | rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$"
     | fields bucketId, id, bkt, idx
     | stats dc(bucketId) as "Total Buckets" by idx
+
+CHECK OVERALL indexes
+| dbinspect index=*
+| search index!=_* 
+| rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$" 
+| search state=warm AND NOT bkt IN (GUIDs) 
+| dedup bucketId 
+| fields bucketId,idx 
+| eval bkt_exists_in_splunk_cloud="true" 
+| append 
+    [| inputlookup dbinspect_first_wave.csv |search index=ent_app_*
+    | rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$" 
+    | eval is_migration_bkt="true" 
+    | fields bucketId, idx,is_migration_bkt] 
+| stats values(*) AS * by bucketId 
+| sort bucketId 
+| eval bkt_exists_in_splunk_cloud = if(isnull(bkt_exists_in_splunk_cloud),"false",bkt_exists_in_splunk_cloud),is_migration_bkt = if(isnull(is_migration_bkt),"false",is_migration_bkt) 
+| eval migrated=if(bkt_exists_in_splunk_cloud=="true" AND is_migration_bkt=="true", "true", "false") 
+| search is_migration_bkt=true bkt_exists_in_splunk_cloud="*"
+|stats c(bucketId) as bucketId c(migrated) as migrated by idx
+
     -->
 <form version="1.1" theme="dark">
   <!--Base searches-->\<init>
