@@ -1,8 +1,9 @@
 <!-- 
-Run ON-PREM
+Run ON SPLUNK CLOUD
 | dbinspect index=* |stats values(guId) as GUIDs delim="," |nomv GUIDs
 COPY THE RESULT
 
+Run ON-PREM:
 For the list of buckets:
 | dbinspect index=* | search state!=hot | dedup bucketId | rex field=bucketId "(?<index>[^~]+)~(?<bid>.*)" | table *
 
@@ -10,23 +11,18 @@ Check all unique buckets
 | inputlookup $lookup$
     | rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$"
     | fields bucketId, id, bkt, idx
-    | stats dc(id) as "Total Buckets" by idx
-    
-
---><form version="1.1" theme="dark">
-  <!--Base searches-->\
-  
-  
-  <init>
+    | stats dc(bucketId) as "Total Buckets" by idx
+    -->
+<form version="1.1" theme="dark">
+  <!--Base searches-->\<init>
     <set token="guid">PASTE IT HERE</set>
   </init>
   <search id="base1">
-    
     <query>    | dbinspect index=$idx$  
 | rex field="bucketId" "(?&lt;idx&gt;.*?)~\d+~(?&lt;bkt&gt;.*?)$" 
 | search state=warm AND NOT bkt IN ($guid$) 
-| dedup id 
-| fields id 
+| dedup bucketId 
+| fields bucketId 
 | eval bkt_exists_in_splunk_cloud="true" 
 | append 
     [| inputlookup $lookup$
@@ -34,39 +30,41 @@ Check all unique buckets
     | fields bucketId, id, bkt 
     | search bucketId=$idx$~* 
     | eval is_migration_bkt="true" 
-    | dedup id 
-    | fields id, is_migration_bkt] 
+    | dedup bucketId 
+    | fields bucketId, is_migration_bkt] 
 | append 
     [ search index=_internal host=*splunkcloud.com component=bucketmover "freeze completed succesfully" 
     | fields bid 
     | rex field="bid" "^(?&lt;index_name&gt;.*?)~(?&lt;id&gt;\d+)~(?&lt;GUID&gt;.*?)$" 
     | search index_name=$idx$  NOT GUID IN ($guid$) 
     | eval state="frozen" 
-    | dedup id 
+    | dedup id |rename bid as bucketId
     | fields id,state] 
-| stats values(*) AS * by id
-| sort id 
+| stats values(*) AS * by bucketId
+| sort bucketId 
 | eval bkt_exists_in_splunk_cloud = if(isnull(bkt_exists_in_splunk_cloud),"false",bkt_exists_in_splunk_cloud), state = if(isnull(state),"Not Frozen",state),is_migration_bkt = if(isnull(is_migration_bkt),"false",is_migration_bkt) | search is_migration_bkt=true bkt_exists_in_splunk_cloud=$missing$</query>
     <earliest>0</earliest>
     <latest></latest>
   </search>
-  <label>&lt;STACK&gt; Data Validation</label>
+  <label>fnf Data Validation v2</label>
   <fieldset submitButton="false" autoRun="false">
     <input type="dropdown" token="lookup" searchWhenChanged="true">
       <label>Region</label>
-      <choice value="LOOKUP.CSV">LOOKUP NAME</choice>
+      <choice value="dbinspect_first_wave.csv">On-prem Buckets</choice>
       <search>
         <query/>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
+      <default>dbinspect_first_wave.csv</default>
+      <initialValue>dbinspect_first_wave.csv</initialValue>
     </input>
     <input type="dropdown" token="idx" searchWhenChanged="true">
       <label>Index</label>
       <fieldForLabel>title</fieldForLabel>
       <fieldForValue>title</fieldForValue>
       <search>
-        <query>|rest /services/data/indexes | fields title | dedup title | sort title</query>
+        <query>| rest timeout=600 splunk_server=local /services/data/distributed-indexes count=0 | fields title | dedup title</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
@@ -85,7 +83,7 @@ Check all unique buckets
       <table>
         <title>All buckets</title>
         <search base="base1">
-          <query>| fields id, bkt_exists_in_splunk_cloud, is_migration_bkt,state</query>
+          <query>| fields bucketId, bkt_exists_in_splunk_cloud, is_migration_bkt,state</query>
         </search>
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
@@ -97,16 +95,16 @@ Check all unique buckets
       <single>
         <title>Total Buckets</title>
         <search base="base1">
-          <query>| stats c(id)</query>
+          <query>| stats c(bucketId)</query>
         </search>
         <option name="drilldown">none</option>
       </single>
     </panel>
-            <panel>
+    <panel>
       <single>
         <title>Total Frozen Buckets</title>
         <search base="base1">
-          <query>| search state="frozen" | stats c(id)</query>
+          <query>| search state="frozen" | stats c(bucketId)</query>
         </search>
         <option name="drilldown">none</option>
       </single>
@@ -115,11 +113,11 @@ Check all unique buckets
       <single>
         <title>Total $idx$ buckets</title>
         <search>
-           <query>| inputlookup $lookup$
+          <query>| inputlookup $lookup$
     | rex field="bucketId" "(?&lt;idx&gt;.*?)~\d+~(?&lt;bkt&gt;.*?)$" 
     | fields bucketId, id, bkt 
     | search bucketId=$idx$~* 
-    | stats dc(id) as "Total Buckets"</query>
+    | stats dc(bucketId) as "Total Buckets"</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
         </search>
@@ -131,7 +129,7 @@ Check all unique buckets
   <row>
     <panel>
       <table>
-        <title>Search On-prem</title>
+        <title>Search On-prem s2dc</title>
         <search base="base1">
           <query>| stats values(id) as ids 
 | eval ids = mvjoin(ids,","), search1 = "| dbinspect index=", search2=" |search id IN (", search3= ") splunk_server=* NOT state=hot | dedup bucketId | rex field=bucketId \"(?&lt;index&gt;[^~]+)~(?&lt;bid&gt;.*)\" | table * ", full_search = search1."$idx$".search2.ids.search3
