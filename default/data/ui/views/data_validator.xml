@@ -1,6 +1,9 @@
 <!-- 
-Run ON SPLUNK CLOUD
-| dbinspect index=* |stats values(guId) as GUIDs delim="," |nomv GUIDs
+Run ON SPLUNK CLOUD:
+| inputlookup $lookup$
+| rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$" 
+| stats values(bkt) as GUIDs delim="," |nomv GUIDs
+
 COPY THE RESULT
 
 Run ON-PREM:
@@ -17,12 +20,12 @@ CHECK OVERALL indexes
 | dbinspect index=*
 | search index!=_* 
 | rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$" 
-| search state=warm AND NOT bkt IN (GUIDs) 
+| search state=warm AND bkt IN ($GUIDs$) 
 | dedup bucketId 
 | fields bucketId,idx 
 | eval bkt_exists_in_splunk_cloud="true" 
 | append 
-    [| inputlookup dbinspect_first_wave.csv |search index=ent_app_*
+    [| inputlookup $lookup$ |search index=*
     | rex field="bucketId" "(?<idx>.*?)~\d+~(?<bkt>.*?)$" 
     | eval is_migration_bkt="true" 
     | fields bucketId, idx,is_migration_bkt] 
@@ -41,7 +44,7 @@ CHECK OVERALL indexes
   <search id="base1">
     <query>    | dbinspect index=$idx$  
 | rex field="bucketId" "(?&lt;idx&gt;.*?)~\d+~(?&lt;bkt&gt;.*?)$" 
-| search state=warm AND NOT bkt IN ($guid$) 
+| search state=warm AND bkt IN ($guid$) 
 | dedup bucketId 
 | fields bucketId 
 | eval bkt_exists_in_splunk_cloud="true" 
@@ -67,7 +70,7 @@ CHECK OVERALL indexes
     <earliest>0</earliest>
     <latest></latest>
   </search>
-  <label>fnf Data Validation v2</label>
+  <label>STACK Data Validation v2</label>
   <fieldset submitButton="false" autoRun="false">
     <input type="dropdown" token="lookup" searchWhenChanged="true">
       <label>Region</label>
