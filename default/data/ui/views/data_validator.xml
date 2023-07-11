@@ -150,7 +150,7 @@ CHECK OVERALL indexes
       </single>
     </panel>
   </row>
-  <row>
+<!--   <row>
     <panel>
       <table>
         <title>Search On-prem s2dc</title>
@@ -163,5 +163,5 @@ CHECK OVERALL indexes
         <option name="refresh.display">progressbar</option>
       </table>
     </panel>
-  </row>
+  </row>-->
 </form>
