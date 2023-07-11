@@ -4,18 +4,18 @@
     "title": "Knowledge Objects Sync(KOS)",
     "id": {
       "group": null,
-      "name": "ko_checklist",
-      "version": "2.0.3"
+      "name": "kos_v2",
+      "version": "1.0.0"
     },
     "author": [
       {
-        "name": "Christhian Bran(christhianb@splunk.com)",
+        "name": "splunkbase@prudentconsulting.com",
         "email": null,
         "company": null
       }
     ],
     "releaseDate": null,
-    "description": "Compare Your Content Here, Use the Magic 8, etc.",
+    "description": "Compare Your Content Here while execeuting a migration.",
     "classification": {
       "intendedAudience": null,
       "categories": [],
