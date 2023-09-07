@@ -1,14 +1,15 @@
+<!--
 <form version="1.1">
   <!-- BASE SEARCHES-->
   <!-- Saved Searches-->
   <search id="savedsearch">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_saved_searches_src.csv 
+      <![CDATA[| inputlookup $lookup$_all_saved_searches_src.csv | search title="$search_savedsearch$"
     | eval src = "true"  
     | rename eai:acl.app as src_APP, eai:acl.owner as src_OWNER, eai:acl.sharing as src_SHARING, search as src_search  
     |search src_SHARING$user$ 
     | append     
-    [| rest splunk_server=local /servicesNS/-/-/saved/searches     
+    [| rest splunk_server=local /servicesNS/-/-/saved/searches | search title="$search_savedsearch$"  
     | fields eai:acl.app title eai:acl.owner eai:acl.sharing disabled search    
     | rename eai:acl.app as dest_APP, eai:acl.owner as dest_OWNER, eai:acl.sharing as dest_SHARING, search as dest_search     
     |search dest_SHARING$user$     
@@ -24,13 +25,13 @@
   <!-- Dashboards-->
   <search id="dashboard">
     <query>
-      <![CDATA[| inputlookup $lookup$_all_dashboards.csv |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T"
+      <![CDATA[| inputlookup $lookup$_all_dashboards.csv |rex field=updated "^(?<year>\d{4})\-(?<month>\d{2})\-(?<day>\d+)T" | search title="$search_dashboard$" label="$search_dashboard_label$"
 | eval src = "true" 
 | rename eai:acl.app as src_APP, eai:acl.sharing as src_SHARING, disabled as src_disabled, label as src_label, eai:acl.owner as src_owner, eai:data as src_data
 |eval src_data = replace(src_data,"\<form","<form version=\"1.1\""),src_data= replace(src_data,"\<dashboard","<dashboard version=\"1.1\""),src_data = replace(src_data,"\<form version=\"1\.1\"at","<format")
 |search src_SHARING$user$
 | append 
-    [| rest splunk_server=local /servicesNS/-/-/data/ui/views 
+    [| rest splunk_server=local /servicesNS/-/-/data/ui/views | search title="$search_dashboard$" label="$search_dashboard_label$"
     | fields eai:acl.sharing, eai:acl.app, disabled, label, title, eai:acl.owner, eai:data
     | rename eai:acl.app as dest_APP, eai:acl.sharing as dest_SHARING, disabled as dest_disabled, label as dest_label, eai:acl.owner as dest_owne,  eai:data as dest_data
     |search dest_SHARING$user$
@@ -191,7 +192,7 @@
     <earliest>-24h@h</earliest>
     <latest>now</latest>
   </search>
-    <search id="roles_indexes">
+  <search id="roles_indexes">
     <query>
       <![CDATA[| inputlookup $lookup$_all_roles_src_indexes.csv 
 | rename capabilities as src_capabilities, imported_capabilities as src_imported_capabilities, imported_roles as src_imported_roles,  srchIndexesAllowed as src_srchIndexesAllowed, srchIndexesDefault as src_srchIndexesDefault
@@ -262,9 +263,10 @@
       <initialValue>=*</initialValue>
     </input>
     <input type="radio" token="missing" searchWhenChanged="true">
-      <label>Missing</label>
-      <choice value="false">True</choice>
-      <choice value="true">False</choice>
+      <label>Content</label>
+      <choice value="false">Not Migrated</choice>
+      <choice value="true">Migrated</choice>
+      <choice value="*">All</choice>
       <default>false</default>
       <initialValue>false</initialValue>
       <prefix>"</prefix>
@@ -328,7 +330,7 @@
       <label>Apps</label>
       <choice value="true">Visible</choice>
     </input>
-        <input type="checkbox" token="show_indexes">
+    <input type="checkbox" token="show_indexes">
       <label>Indexes</label>
       <choice value="true">Visible</choice>
     </input>
@@ -360,6 +362,11 @@
         <initialValue></initialValue>
         <valuePrefix>"</valuePrefix>
         <valueSuffix>"</valueSuffix>
+      </input>
+      <input type="text" token="search_savedsearch" searchWhenChanged="true">
+        <label>Search</label>
+        <default>*</default>
+        <initialValue>*</initialValue>
       </input>
       <table>
         <title>Click anywhere and check the saved searches' content comparison</title>
@@ -442,6 +449,16 @@
         <initialValue></initialValue>
         <valuePrefix>"</valuePrefix>
         <valueSuffix>"</valueSuffix>
+      </input>
+      <input type="text" token="search_dashboard" searchWhenChanged="true">
+        <label>Search</label>
+        <default>*</default>
+        <initialValue>*</initialValue>
+      </input>
+      <input type="text" token="search_dashboard_label" searchWhenChanged="true">
+        <label>Label</label>
+        <default>*</default>
+        <initialValue>*</initialValue>
       </input>
       <table>
         <title>Click anywhere and check the dashboards' content comparison</title>
@@ -1067,7 +1084,7 @@
         </change>
       </input>
       <table>
-        <title>Check if on-prem imported_roles are similar to Cloud imported_roles </title>
+        <title>Check if on-prem imported_roles are similar to Cloud imported_roles</title>
         <search base="roles">
           <query>
             <![CDATA[
@@ -1081,8 +1098,8 @@
         <option name="drilldown">none</option>
         <option name="refresh.display">progressbar</option>
       </table>
-            <table>
-        <title>Check if on-prem srchIndexesAllowed are similar to Cloud srchIndexesAllowed </title>
+      <table>
+        <title>Check if on-prem srchIndexesAllowed are similar to Cloud srchIndexesAllowed</title>
         <search base="roles_indexes">
           <query>
             <![CDATA[
@@ -1185,7 +1202,7 @@
       </table>
     </panel>
   </row>
-    <row>
+  <row>
     <panel depends="$show_indexes$">
       <title>Indexes</title>
       <table>
