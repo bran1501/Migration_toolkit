@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.0.0",
   "info": {
-    "title": "Knowledge Objects Sync(KOS)",
+    "title": "KOS V2",
     "id": {
       "group": null,
       "name": "kos_v2",
