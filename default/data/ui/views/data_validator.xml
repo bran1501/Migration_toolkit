@@ -92,11 +92,8 @@ CHECK OVERALL indexes
     <input type="multiselect" token="guid" searchWhenChanged="true">
       <label>GUID</label>
       <delimiter> </delimiter>
-      <choice value="BE8D01FC-6683-46E7-9E30-11FFDE9E0977">SPLUNKINDEKT128</choice>
-      <choice value="0E200BA7-CBE9-4291-9569-FE0EB85A23A5">SPLUNKINDEKT54</choice>
-      <choice value="A5E4F868-DAAB-4767-B1DF-79EE1DF7012D">SPLUNKINDTVA202</choice>
-      <choice value="ACBB133A-4225-498F-B258-8D22B97D4169">SPLUNKINDTVA27</choice>
-      <choice value="64AF80E4-D339-4B35-A199-0CF5C064F7FE">SPLUNKIND</choice>
+      <choice value="GUID">GUID</choice>
+
     </input>
     <input type="text" token="rows" searchWhenChanged="true">
       <label>Rows Count</label>
