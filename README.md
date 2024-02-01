@@ -69,6 +69,6 @@ If you click on the panel, it will show another search that is comparing the con
 No special instructions for upgrading this app to a newer version.
  
 # Help
-While this app is not formally supported, the developer can be reached at bran.c@prudentconsulting.com/bran1501@gmail.com (OR in splunk-usergroups slack, @Christhian Bran). Responses are made on a best effort basis. Feedback is always welcome and appreciated!
+While this app is not formally supported, the developer can be reached at christhianb@splunk.com (OR in splunk-usergroups slack, @Christhian Bran). Responses are made on a best effort basis. Feedback is always welcome and appreciated!
 (if you use the User Group approach, include: Learn more about splunk-usergroups slack here: https://docs.splunk.com/Documentation/Community/current/community/Chat#Join_us_on_Slack)
 
